@@ -57,6 +57,47 @@ The dataset used is the **🌱 Potato Plant Diseases Data 🍂**, originally col
     streamlit run app.py
     ```
 
+## 🚢 Production Deployment with Docker and Traefik
+
+The production setup assumes that Traefik is already running on the server and
+that it uses an external Docker network named `proxy` with a certificate
+resolver named `letsencrypt`.
+
+1. **Prepare the production override**
+   ```bash
+   cp compose.prod.example.yaml compose.prod.yaml
+   ```
+
+2. **Set the application hostname**
+
+   Edit `compose.prod.yaml` and replace `potato.example.com` with the DNS
+   hostname that points to the server. Make sure the hostname is publicly
+   resolvable and that Traefik can issue certificates for it.
+
+3. **Confirm the Traefik network exists**
+   ```bash
+   docker network inspect proxy
+   ```
+
+4. **Build and start the application**
+   ```bash
+   docker compose -f compose.yaml -f compose.prod.yaml up -d --build
+   ```
+
+The production override removes the direct host port mapping and exposes the
+Streamlit application only through Traefik over HTTPS.
+
+Useful commands:
+
+```bash
+docker compose -f compose.yaml -f compose.prod.yaml ps
+docker compose -f compose.yaml -f compose.prod.yaml logs -f potato-disease-app
+docker compose -f compose.yaml -f compose.prod.yaml down
+```
+
+Do not commit `compose.prod.yaml`; it is ignored because it contains the
+server-specific hostname and deployment configuration.
+
 ## 🧠 Explainable AI (Grad-CAM)
 We used **Grad-CAM** to validate our model. The heatmaps below show that the model correctly focuses on the **lesions and spots** on the leaves rather than the background.
 
@@ -72,4 +113,3 @@ This project was developed by:
 * **Farhana Yeasmin** (Visual Designer)
 
 ---
-
