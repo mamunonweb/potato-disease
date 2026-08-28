@@ -7,7 +7,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 COPY requirements.txt .
-RUN pip install --upgrade pip \
+RUN pip install pip==26.2.1 \
     && pip install -r requirements.txt
 
 COPY app.py README.md explainable_cnn_model.keras ./
