@@ -3,10 +3,6 @@ services:
     # Remove the local 8501:8501 host mapping in production.
     ports: !override []
 
-    environment:
-      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
-      OPENROUTER_MODEL: openrouter/free
-
     labels:
       - 'traefik.enable=true'
       - 'traefik.docker.network=proxy'

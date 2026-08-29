@@ -65,10 +65,14 @@ resolver named `letsencrypt`.
 
 1. **Prepare the production override**
    ```bash
+   cp .env.example .env
    cp compose.prod.example.yaml compose.prod.yaml
    ```
 
-2. **Set the application hostname**
+2. **Configure environment variables and hostname**
+
+   Edit `.env` and set `OPENROUTER_API_KEY` to your real key. Do not commit
+   `.env`.
 
    Edit `compose.prod.yaml` and replace `potato.example.com` with the DNS
    hostname that points to the server. Make sure the hostname is publicly
@@ -85,7 +89,9 @@ resolver named `letsencrypt`.
    ```
 
 The production override removes the direct host port mapping and exposes the
-Streamlit application only through Traefik over HTTPS.
+Streamlit application only through Traefik over HTTPS. Both local and
+production Compose configurations load their container environment from
+`.env`.
 
 ### OpenRouter-generated guidance
 
@@ -94,17 +100,17 @@ generate current guidance from the predicted disease class. The CNN remains
 responsible for the prediction, while the built-in disease information is used
 automatically if OpenRouter is unavailable, rate-limited, or not configured.
 
-Set the API key on the server without committing it to the repository:
+Set the API key in `.env` without committing it to the repository:
 
 ```bash
-export OPENROUTER_API_KEY='sk-or-v1-...'
-export OPENROUTER_MODEL='openrouter/free'
+OPENROUTER_API_KEY=sk-or-v1-...
+OPENROUTER_MODEL=openrouter/free
 ```
 
-The production override passes these values to the application container. The
-generated guidance is cached for 24 hours and is limited to symptoms, causes,
-actions, and prevention information. It should be treated as general guidance,
-not as a definitive diagnosis or a substitute for local agricultural advice.
+The generated guidance is cached for 24 hours and is limited to symptoms,
+causes, actions, and prevention information. It should be treated as general
+guidance, not as a definitive diagnosis or a substitute for local agricultural
+advice.
 
 Useful commands:
 
