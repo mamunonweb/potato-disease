@@ -1,0 +1,21 @@
+services:
+  potato-disease-app:
+    # Remove the local 8501:8501 host mapping in production.
+    ports: !override []
+
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.docker.network=proxy'
+      - 'traefik.http.routers.potato_disease.rule=Host(`potato.example.com`)'
+      - 'traefik.http.routers.potato_disease.entrypoints=websecure'
+      - 'traefik.http.routers.potato_disease.tls=true'
+      - 'traefik.http.routers.potato_disease.tls.certresolver=letsencrypt'
+      - 'traefik.http.services.potato_disease.loadbalancer.server.port=8501'
+
+    networks:
+      - default
+      - proxy
+
+networks:
+  proxy:
+    external: true
