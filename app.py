@@ -141,6 +141,113 @@ DISEASE_INFO = {
 }
 
 # ============================================================
+# LLM-GENERATED DISEASE GUIDANCE
+# ============================================================
+
+LLM_CONTENT_FIELDS = ("description", "symptoms", "causes", "actions", "prevention")
+
+
+def _openrouter_api_key():
+    """Read the API key without exposing it in the UI or source code."""
+    api_key = os.getenv("OPENROUTER_API_KEY")
+    if api_key:
+        return api_key
+
+    try:
+        return st.secrets.get("OPENROUTER_API_KEY")
+    except Exception:
+        return None
+
+
+def _valid_guidance(content):
+    """Return only the expected, display-safe fields from an LLM response."""
+    if not isinstance(content, dict):
+        return None
+
+    validated = {}
+    if isinstance(content.get("description"), str) and content["description"].strip():
+        validated["description"] = content["description"].strip()
+
+    for field in ("symptoms", "causes", "actions", "prevention"):
+        value = content.get(field)
+        if not isinstance(value, list):
+            return None
+        items = [item.strip() for item in value if isinstance(item, str) and item.strip()]
+        if not items or len(items) > 8:
+            return None
+        validated[field] = items
+
+    if len(validated) != len(LLM_CONTENT_FIELDS):
+        return None
+    return validated
+
+
+@st.cache_data(ttl=86400, show_spinner=False)
+def generate_disease_guidance(predicted_class):
+    """Generate cached guidance, returning None when the provider is unavailable."""
+    api_key = _openrouter_api_key()
+    if not api_key:
+        return None
+
+    try:
+        from openrouter import OpenRouter
+
+        base_info = DISEASE_INFO[predicted_class]
+        with OpenRouter(api_key=api_key) as client:
+            response = client.chat.send(
+                model=os.getenv("OPENROUTER_MODEL", "openrouter/free"),
+                stream=False,
+                temperature=0.2,
+                max_tokens=700,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": (
+                            "You are a cautious agricultural information assistant. "
+                            "Return valid JSON only with exactly these fields: "
+                            "description (string), symptoms (array of strings), "
+                            "causes (array of strings), actions (array of strings), "
+                            "prevention (array of strings). Provide general guidance "
+                            "for potato plants. Do not claim certainty, invent facts, "
+                            "or provide pesticide names, dosage, or application rates. "
+                            "Recommend local agricultural guidance for treatment decisions."
+                        ),
+                    },
+                    {
+                        "role": "user",
+                        "content": (
+                            f"Generate concise guidance for {base_info['name']}. "
+                            "Use this existing reference as context, but improve its "
+                            f"clarity without contradicting it:\n{json.dumps(base_info)}"
+                        ),
+                    },
+                ],
+            )
+        content = response.choices[0].message.content
+        if not isinstance(content, str):
+            return None
+
+        content = content.strip()
+        if content.startswith("```"):
+            content = content.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+        return _valid_guidance(json.loads(content))
+    except Exception:
+        # LLM content is an enhancement; prediction pages must remain available.
+        return None
+
+
+def get_disease_info(predicted_class):
+    """Return display content and whether it came from OpenRouter."""
+    fallback = DISEASE_INFO[predicted_class]
+    generated = generate_disease_guidance(predicted_class)
+    if not generated:
+        return fallback, False
+
+    info = dict(fallback)
+    info.update(generated)
+    return info, True
+
+# ============================================================
 # MODEL
 # ============================================================
 
@@ -625,7 +732,7 @@ def create_pdf_report():
     prediction = st.session_state.prediction
     confidence = float(st.session_state.confidence)
     probabilities = np.asarray(st.session_state.probabilities)
-    info = DISEASE_INFO[prediction]
+    info, _ = get_disease_info(prediction)
 
     # Grad-CAM is optional for the PDF. The report must still be
     # generated when the saved model architecture cannot support it.
@@ -1172,9 +1279,14 @@ elif page == "📚 Disease Information":
 
     predicted_class = st.session_state.prediction
     confidence = st.session_state.confidence
-    info = DISEASE_INFO[predicted_class]
+    info, generated_content = get_disease_info(predicted_class)
 
     st.subheader(f"🌿 {info['name']}")
+
+    if generated_content:
+        st.caption("✨ Guidance generated with OpenRouter")
+    else:
+        st.caption("ℹ️ Showing built-in guidance (LLM unavailable or not configured)")
 
     st.write(info["description"])
 
@@ -1221,11 +1333,16 @@ elif page == "🩺 Causes & Solutions":
     st.title("🩺 Why Did This Problem Occur?")
 
     predicted_class = st.session_state.prediction
-    info = DISEASE_INFO[predicted_class]
+    info, generated_content = get_disease_info(predicted_class)
 
     st.subheader(
         f"Detected condition: {info['name']}"
     )
+
+    if generated_content:
+        st.caption("✨ Guidance generated with OpenRouter")
+    else:
+        st.caption("ℹ️ Showing built-in guidance (LLM unavailable or not configured)")
 
     st.divider()
 

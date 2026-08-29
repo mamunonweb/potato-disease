@@ -87,6 +87,25 @@ resolver named `letsencrypt`.
 The production override removes the direct host port mapping and exposes the
 Streamlit application only through Traefik over HTTPS.
 
+### OpenRouter-generated guidance
+
+The Disease Information and Causes & Solutions pages can use OpenRouter to
+generate current guidance from the predicted disease class. The CNN remains
+responsible for the prediction, while the built-in disease information is used
+automatically if OpenRouter is unavailable, rate-limited, or not configured.
+
+Set the API key on the server without committing it to the repository:
+
+```bash
+export OPENROUTER_API_KEY='sk-or-v1-...'
+export OPENROUTER_MODEL='openrouter/free'
+```
+
+The production override passes these values to the application container. The
+generated guidance is cached for 24 hours and is limited to symptoms, causes,
+actions, and prevention information. It should be treated as general guidance,
+not as a definitive diagnosis or a substitute for local agricultural advice.
+
 Useful commands:
 
 ```bash
