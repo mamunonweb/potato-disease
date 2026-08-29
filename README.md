@@ -112,6 +112,9 @@ causes, actions, and prevention information. It should be treated as general
 guidance, not as a definitive diagnosis or a substitute for local agricultural
 advice.
 
+Use **🔐 Check OpenRouter key** in the application sidebar to verify that the
+configured key is accepted and active. The key itself is never displayed.
+
 Useful commands:
 
 ```bash

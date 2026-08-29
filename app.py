@@ -8,6 +8,8 @@ import time
 import csv
 from io import BytesIO
 from datetime import datetime
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 import pandas as pd
 from sklearn.metrics import roc_curve, auc
 from reportlab.lib import colors
@@ -157,6 +159,37 @@ def _openrouter_api_key():
         return st.secrets.get("OPENROUTER_API_KEY")
     except Exception:
         return None
+
+
+def check_openrouter_api_key():
+    """Check the configured key without ever returning or displaying it."""
+    api_key = _openrouter_api_key()
+    if not api_key:
+        return False, "OPENROUTER_API_KEY is not configured."
+
+    request = Request(
+        "https://openrouter.ai/api/v1/key",
+        headers={"Authorization": f"Bearer {api_key}"},
+        method="GET",
+    )
+
+    try:
+        with urlopen(request, timeout=10) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+            key_data = payload.get("data", {})
+            if key_data.get("disabled") is True:
+                return False, "OpenRouter accepted the request, but this key is disabled."
+            return True, "OpenRouter API key is valid and active."
+    except HTTPError as exc:
+        if exc.code == 401:
+            return False, "OpenRouter rejected the API key (401 Unauthorized)."
+        if exc.code == 429:
+            return False, "OpenRouter rate-limited the key check (429 Too Many Requests)."
+        return False, f"OpenRouter key check failed with HTTP {exc.code}."
+    except URLError:
+        return False, "Could not reach OpenRouter. Check the server network connection."
+    except Exception:
+        return False, "OpenRouter returned an unexpected response during the key check."
 
 
 def _valid_guidance(content):
@@ -965,6 +998,14 @@ page = st.sidebar.radio(
 st.sidebar.divider()
 st.sidebar.caption("Custom CNN • TensorFlow/Keras • Grad-CAM")
 st.sidebar.caption("PDF • ROC-AUC • History • Batch Analysis")
+
+if st.sidebar.button("🔐 Check OpenRouter key"):
+    with st.spinner("Checking OpenRouter API key..."):
+        key_valid, key_message = check_openrouter_api_key()
+    if key_valid:
+        st.sidebar.success(key_message)
+    else:
+        st.sidebar.error(key_message)
 
 # ============================================================
 # HOME - ONLY MAIN IMAGE UPLOAD
