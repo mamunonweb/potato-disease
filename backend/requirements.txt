@@ -1,0 +1,7 @@
+fastapi==0.115.12
+uvicorn==0.35.0
+python-multipart==0.0.20
+tensorflow==2.21.0
+numpy==2.4.6
+pillow==12.3.0
+openrouter==1.1.103
