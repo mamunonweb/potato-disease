@@ -1,12 +1,24 @@
 import { BrowserRouter, Route, Routes } from 'react-router'
-import { HomePage } from '@/pages/home'
+import { AppShell } from '@/components/app-shell'
+import { PredictionProvider } from '@/context/prediction'
+import { ChatPage } from '@/pages/chat'
+import { DetectPage } from '@/pages/detect'
+import { InfoPage } from '@/pages/info'
+import { ResultsPage } from '@/pages/results'
 
 export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-      </Routes>
+      <PredictionProvider>
+        <AppShell>
+          <Routes>
+            <Route path="/" element={<DetectPage />} />
+            <Route path="/results" element={<ResultsPage />} />
+            <Route path="/chat" element={<ChatPage />} />
+            <Route path="/info" element={<InfoPage />} />
+          </Routes>
+        </AppShell>
+      </PredictionProvider>
     </BrowserRouter>
   )
 }

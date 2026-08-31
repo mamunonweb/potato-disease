@@ -1,0 +1,130 @@
+import { Link, Navigate } from 'react-router'
+import { BookOpen, MessageCircle } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Progress } from '@/components/ui/progress'
+import { Separator } from '@/components/ui/separator'
+import { usePrediction } from '@/context/prediction'
+
+const DISPLAY_NAMES: Record<string, string> = {
+  Potato___Early_blight: 'Early Blight',
+  Potato___Late_blight: 'Late Blight',
+  Potato___healthy: 'Healthy',
+}
+
+export function ResultsPage() {
+  const { prediction, imageUrl } = usePrediction()
+  if (!prediction || !imageUrl) return <Navigate to="/" replace />
+
+  const isHealthy = prediction.predicted_class === 'Potato___healthy'
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-semibold">Detection results</h1>
+        <Badge variant={isHealthy ? 'secondary' : 'destructive'}>
+          {isHealthy ? 'Healthy' : 'Disease detected'}
+        </Badge>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Grad-CAM explanation</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <figure>
+                <img
+                  src={imageUrl}
+                  alt="Uploaded potato leaf"
+                  className="aspect-square w-full rounded-lg border object-contain"
+                />
+                <figcaption className="mt-1 text-center text-xs text-muted-foreground">
+                  Original
+                </figcaption>
+              </figure>
+              {prediction.gradcam ? (
+                <figure>
+                  <img
+                    src={prediction.gradcam.image_data_uri}
+                    alt="Grad-CAM attention overlay"
+                    className="aspect-square w-full rounded-lg border object-contain"
+                  />
+                  <figcaption className="mt-1 text-center text-xs text-muted-foreground">
+                    Attention overlay
+                  </figcaption>
+                </figure>
+              ) : (
+                <div className="flex aspect-square items-center justify-center rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">
+                  {prediction.gradcam_note ?? 'Grad-CAM unavailable.'}
+                </div>
+              )}
+            </div>
+            {prediction.gradcam && (
+              <p className="text-sm text-muted-foreground">
+                Attention level:{' '}
+                <span className="font-medium text-foreground">
+                  {prediction.gradcam.severity.level}
+                </span>{' '}
+                — an experimental estimate, not a validated severity
+                percentage.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Prediction</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            <div>
+              <p className="text-2xl font-semibold">
+                {prediction.display_name}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Confidence {(prediction.confidence * 100).toFixed(1)}%
+              </p>
+            </div>
+            <Separator />
+            <div className="flex flex-col gap-2">
+              <p className="text-sm font-medium">Class probabilities</p>
+              {Object.entries(prediction.probabilities).map(
+                ([className, value]) => (
+                  <div key={className} className="flex flex-col gap-1">
+                    <div className="flex justify-between text-sm">
+                      <span>{DISPLAY_NAMES[className] ?? className}</span>
+                      <span>{(value * 100).toFixed(1)}%</span>
+                    </div>
+                    <Progress value={value * 100} />
+                  </div>
+                ),
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2 pt-2">
+              <Button asChild>
+                <Link to="/chat">
+                  <MessageCircle className="size-4" /> Ask AI about this
+                </Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link to="/info">
+                  <BookOpen className="size-4" /> Disease information
+                </Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <p className="text-xs text-muted-foreground">{prediction.disclaimer}</p>
+    </div>
+  )
+}
