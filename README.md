@@ -76,13 +76,15 @@ docker compose up -d --build
 
 ## 🚢 Production Deployment with Docker and Traefik
 
-The stack runs as three Compose services:
+The stack runs as two Compose services:
 
 | Service | Purpose | Port |
 | :--- | :--- | :--- |
 | `potato-disease-frontend` | React SPA served by nginx | 80 |
 | `potato-disease-backend` | FastAPI (prediction, Grad-CAM, chat) | 8000 |
-| `potato-disease-app` | Legacy Streamlit app (until the new stack is verified) | 8501 |
+
+The legacy Streamlit app (`app.py`) is retired from Docker but still runs
+locally with `streamlit run app.py`.
 
 The production setup assumes that Traefik is already running on the server and
 that it uses an external Docker network named `proxy` with a certificate
@@ -92,7 +94,6 @@ Routing uses a single domain so the browser talks to the API same-origin:
 
 * `https://potato.example.com/` → React frontend
 * `https://potato.example.com/api/...` → FastAPI backend
-* `https://potato-streamlit.example.com/` → legacy Streamlit app
 
 1. **Prepare the production override**
    ```bash
@@ -100,15 +101,14 @@ Routing uses a single domain so the browser talks to the API same-origin:
    cp compose.prod.example.yaml compose.prod.yaml
    ```
 
-2. **Configure environment variables and hostnames**
+2. **Configure environment variables and hostname**
 
    Edit `.env` and set `OPENROUTER_API_KEY` to your real key. Do not commit
    `.env`.
 
-   Edit `compose.prod.yaml` and replace `potato.example.com` and
-   `potato-streamlit.example.com` with DNS names that point to the server.
-   Make sure the hostnames are publicly resolvable and that Traefik can issue
-   certificates for them.
+   Edit `compose.prod.yaml` and replace `potato.example.com` with the DNS
+   name that points to the server. Make sure the hostname is publicly
+   resolvable and that Traefik can issue certificates for it.
 
 3. **Confirm the Traefik network exists**
    ```bash

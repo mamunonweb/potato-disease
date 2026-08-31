@@ -10,7 +10,8 @@ RUN apt-get update \
 WORKDIR /app
 
 COPY backend/requirements.txt /app/backend/requirements.txt
-RUN pip install --no-cache-dir -r /app/backend/requirements.txt
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install -r /app/backend/requirements.txt
 
 COPY backend /app/backend
 COPY explainable_cnn_model.keras /app/explainable_cnn_model.keras

@@ -1,13 +1,10 @@
 # Production override. Copy to compose.prod.yaml, then replace the
-# placeholder hostnames with the DNS names that point to your server.
+# placeholder hostname with the DNS name that points to your server.
 # Do not commit compose.prod.yaml.
 #
 # Routing (single domain, no CORS in production):
 #   https://potato.example.com/api/... -> FastAPI backend (:8000)
 #   https://potato.example.com/...     -> static React frontend (:80)
-#
-# The legacy Streamlit app stays on its own hostname until the
-# FastAPI/React stack is verified, then remove that service block.
 services:
   potato-disease-frontend:
     ports: !override []
@@ -45,22 +42,6 @@ services:
       - 'traefik.http.middlewares.potato_api_ratelimit.ratelimit.burst=20'
       - 'traefik.http.routers.potato_backend.middlewares=potato_api_ratelimit'
       - 'traefik.http.services.potato_backend.loadbalancer.server.port=8000'
-
-    networks:
-      - default
-      - proxy
-
-  potato-disease-app:
-    ports: !override []
-
-    labels:
-      - 'traefik.enable=true'
-      - 'traefik.docker.network=proxy'
-      - 'traefik.http.routers.potato_disease.rule=Host(`potato-streamlit.example.com`)'
-      - 'traefik.http.routers.potato_disease.entrypoints=websecure'
-      - 'traefik.http.routers.potato_disease.tls=true'
-      - 'traefik.http.routers.potato_disease.tls.certresolver=letsencrypt'
-      - 'traefik.http.services.potato_disease.loadbalancer.server.port=8501'
 
     networks:
       - default
