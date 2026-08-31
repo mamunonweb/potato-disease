@@ -57,11 +57,42 @@ The dataset used is the **🌱 Potato Plant Diseases Data 🍂**, originally col
     streamlit run app.py
     ```
 
+### React + FastAPI stack (in migration)
+
+```bash
+# FastAPI backend in Docker (serves http://localhost:8000)
+docker compose up -d potato-disease-backend
+
+# React frontend dev server (serves http://localhost:5173)
+cd frontend && bun install && bun run dev
+```
+
+The full stack (including the nginx-served frontend on
+http://localhost:8080) can also run entirely in Docker:
+
+```bash
+docker compose up -d --build
+```
+
 ## 🚢 Production Deployment with Docker and Traefik
+
+The stack runs as three Compose services:
+
+| Service | Purpose | Port |
+| :--- | :--- | :--- |
+| `potato-disease-frontend` | React SPA served by nginx | 80 |
+| `potato-disease-backend` | FastAPI (prediction, Grad-CAM, chat) | 8000 |
+| `potato-disease-app` | Legacy Streamlit app (until the new stack is verified) | 8501 |
 
 The production setup assumes that Traefik is already running on the server and
 that it uses an external Docker network named `proxy` with a certificate
 resolver named `letsencrypt`.
+
+Routing uses a single domain so the browser talks to the API same-origin:
+
+* `https://potato.example.com/` → React frontend
+* `https://potato.example.com/api/...` → FastAPI backend
+* `https://potato-streamlit.example.com/` → legacy Streamlit app
 
 1. **Prepare the production override**
    ```bash
@@ -69,14 +100,15 @@ resolver named `letsencrypt`.
    cp compose.prod.example.yaml compose.prod.yaml
    ```
 
-2. **Configure environment variables and hostname**
+2. **Configure environment variables and hostnames**
 
    Edit `.env` and set `OPENROUTER_API_KEY` to your real key. Do not commit
    `.env`.
 
-   Edit `compose.prod.yaml` and replace `potato.example.com` with the DNS
-   hostname that points to the server. Make sure the hostname is publicly
-   resolvable and that Traefik can issue certificates for it.
+   Edit `compose.prod.yaml` and replace `potato.example.com` and
+   `potato-streamlit.example.com` with DNS names that point to the server.
+   Make sure the hostnames are publicly resolvable and that Traefik can issue
+   certificates for them.
 
 3. **Confirm the Traefik network exists**
    ```bash
@@ -88,10 +120,22 @@ resolver named `letsencrypt`.
    docker compose -f compose.yaml -f compose.prod.yaml up -d --build
    ```
 
-The production override removes the direct host port mapping and exposes the
-Streamlit application only through Traefik over HTTPS. Both local and
-production Compose configurations load their container environment from
-`.env`.
+The production override removes the direct host port mappings and exposes the
+services only through Traefik over HTTPS. Both local and production Compose
+configurations load their container environment from `.env`. The frontend
+image bakes the API base URL at build time; with the default build argument
+it calls the API same-origin via `/api`, which matches the Traefik routing.
+
+Useful commands:
+
+```bash
+docker compose -f compose.yaml -f compose.prod.yaml ps
+docker compose -f compose.yaml -f compose.prod.yaml logs -f potato-disease-backend
+docker compose -f compose.yaml -f compose.prod.yaml down
+```
+
+Do not commit `compose.prod.yaml`; it is ignored because it contains the
+server-specific hostnames and deployment configuration.
 
 ### OpenRouter-generated guidance
 

@@ -1,12 +1,54 @@
+# Production override. Copy to compose.prod.yaml, then replace the
+# placeholder hostnames with the DNS names that point to your server.
+# Do not commit compose.prod.yaml.
+#
+# Routing (single domain, no CORS in production):
+#   https://potato.example.com/api/... -> FastAPI backend (:8000)
+#   https://potato.example.com/...     -> static React frontend (:80)
+#
+# The legacy Streamlit app stays on its own hostname until the
+# FastAPI/React stack is verified, then remove that service block.
 services:
-  potato-disease-app:
-    # Remove the local 8501:8501 host mapping in production.
+  potato-disease-frontend:
     ports: !override []
 
     labels:
       - 'traefik.enable=true'
       - 'traefik.docker.network=proxy'
-      - 'traefik.http.routers.potato_disease.rule=Host(`potato.example.com`)'
+      - 'traefik.http.routers.potato_frontend.rule=Host(`potato.example.com`)'
+      - 'traefik.http.routers.potato_frontend.entrypoints=websecure'
+      - 'traefik.http.routers.potato_frontend.tls=true'
+      - 'traefik.http.routers.potato_frontend.tls.certresolver=letsencrypt'
+      - 'traefik.http.services.potato_frontend.loadbalancer.server.port=80'
+
+    networks:
+      - default
+      - proxy
+
+  potato-disease-backend:
+    ports: !override []
+
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.docker.network=proxy'
+      - 'traefik.http.routers.potato_backend.rule=Host(`potato.example.com`) && PathPrefix(`/api`)'
+      - 'traefik.http.routers.potato_backend.entrypoints=websecure'
+      - 'traefik.http.routers.potato_backend.tls=true'
+      - 'traefik.http.routers.potato_backend.tls.certresolver=letsencrypt'
+      - 'traefik.http.routers.potato_backend.priority=100'
+      - 'traefik.http.services.potato_backend.loadbalancer.server.port=8000'
+
+    networks:
+      - default
+      - proxy
+
+  potato-disease-app:
+    ports: !override []
+
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.docker.network=proxy'
+      - 'traefik.http.routers.potato_disease.rule=Host(`potato-streamlit.example.com`)'
       - 'traefik.http.routers.potato_disease.entrypoints=websecure'
       - 'traefik.http.routers.potato_disease.tls=true'
       - 'traefik.http.routers.potato_disease.tls.certresolver=letsencrypt'

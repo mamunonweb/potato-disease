@@ -17,6 +17,24 @@ services:
       retries: 3
       start_period: 60s
 
+  potato-disease-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: potato-disease-frontend:latest
+    container_name: potato-disease-frontend
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    depends_on:
+      - potato-disease-backend
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
   potato-disease-backend:
     build:
       context: .
