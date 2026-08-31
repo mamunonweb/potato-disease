@@ -12,7 +12,6 @@ RUN pip install pip==26.2.1 \
 
 COPY app.py README.md explainable_cnn_model.keras ./
 COPY Pred-Image.png ./
-COPY test ./test
 
 EXPOSE 8501
 
