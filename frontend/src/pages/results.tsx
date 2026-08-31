@@ -18,6 +18,12 @@ const DISPLAY_NAMES: Record<string, string> = {
   Potato___healthy: 'Healthy',
 }
 
+const SEVERITY_STYLES: Record<string, string> = {
+  Mild: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400',
+  Moderate: 'bg-amber-500/15 text-amber-700 dark:text-amber-400',
+  Severe: 'bg-red-500/15 text-red-700 dark:text-red-400',
+}
+
 export function ResultsPage() {
   const { prediction, imageUrl } = usePrediction()
   if (!prediction || !imageUrl) return <Navigate to="/" replace />
@@ -68,14 +74,19 @@ export function ResultsPage() {
               )}
             </div>
             {prediction.gradcam && (
-              <p className="text-sm text-muted-foreground">
-                Attention level:{' '}
-                <span className="font-medium text-foreground">
+              <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                <Badge
+                  className={
+                    SEVERITY_STYLES[prediction.gradcam.severity.level] ?? ''
+                  }
+                >
                   {prediction.gradcam.severity.level}
-                </span>{' '}
-                — an experimental estimate, not a validated severity
-                percentage.
-              </p>
+                </Badge>
+                <span>
+                  attention level — an experimental estimate, not a validated
+                  severity percentage.
+                </span>
+              </div>
             )}
           </CardContent>
         </Card>

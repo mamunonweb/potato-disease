@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Navigate } from 'react-router'
-import { Send } from 'lucide-react'
+import { Bot, Send, User } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -110,21 +110,31 @@ export function ChatPage() {
             <div
               key={index}
               className={cn(
-                'flex',
+                'flex items-end gap-2',
                 message.role === 'user' ? 'justify-end' : 'justify-start',
               )}
             >
+              {message.role === 'assistant' && (
+                <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                  <Bot className="size-4 text-primary" />
+                </div>
+              )}
               <div
                 className={cn(
                   'max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2 text-sm',
                   message.role === 'user'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted text-foreground',
+                    ? 'rounded-br-sm bg-primary text-primary-foreground'
+                    : 'rounded-bl-sm bg-muted text-foreground',
                 )}
               >
                 {message.content ||
                   (streaming && index === messages.length - 1 ? '…' : '')}
               </div>
+              {message.role === 'user' && (
+                <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-secondary">
+                  <User className="size-4 text-secondary-foreground" />
+                </div>
+              )}
             </div>
           ))}
           <div ref={bottomRef} />

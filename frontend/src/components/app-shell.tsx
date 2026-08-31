@@ -1,6 +1,7 @@
 import type { ComponentType } from 'react'
 import { NavLink } from 'react-router'
 import { BarChart3, BookOpen, Leaf, MessageCircle, ScanSearch } from 'lucide-react'
+import { ThemeToggle } from '@/components/theme-toggle'
 import { cn } from '@/lib/utils'
 
 interface NavItem {
@@ -44,10 +45,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <span className="hidden sm:inline">{label}</span>
               </NavLink>
             ))}
+            <ThemeToggle />
           </nav>
         </div>
       </header>
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6">{children}</main>
+      <footer className="border-t py-4">
+        <p className="mx-auto w-full max-w-5xl px-4 text-xs text-muted-foreground">
+          AI-based preliminary classification — not a definitive diagnosis.
+          For serious or rapidly spreading crop disease, consult a qualified
+          agricultural professional.
+        </p>
+      </footer>
     </div>
   )
 }
