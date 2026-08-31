@@ -1,6 +1,7 @@
 """Prediction endpoint: upload → prediction + Grad-CAM + guidance."""
 import base64
 import io
+import logging
 import os
 
 import numpy as np
@@ -8,10 +9,18 @@ from fastapi import APIRouter, File, HTTPException, UploadFile
 from PIL import Image
 
 from config import ALLOWED_CONTENT_TYPES, ALLOWED_EXTENSIONS, MAX_UPLOAD_MB
-from schemas import PredictionResponse
+from schemas import (
+    GradcamInfo,
+    GradcamSeverity,
+    GuidanceInfo,
+    PredictionResponse,
+    TopPrediction,
+)
 from services import gradcam, guidance, model
 
 router = APIRouter()
+
+logger = logging.getLogger(__name__)
 
 DISCLAIMER = (
     "This is an AI-based preliminary classification and general "
@@ -84,6 +93,7 @@ async def predict(image: UploadFile = File(...)) -> PredictionResponse:
         )
     except Exception:
         # Do not fail the prediction because Grad-CAM is unavailable.
+        logger.exception("Grad-CAM generation failed.")
         gradcam_note = (
             "The prediction was generated successfully, but Grad-CAM is "
             "unavailable for this model architecture."

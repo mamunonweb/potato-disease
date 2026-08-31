@@ -12,3 +12,7 @@ training_history.json
 model_comparison.json
 Dockerfile
 docker-compose.yml
+frontend/node_modules
+frontend/dist
+test
+.ipynb_checkpoints

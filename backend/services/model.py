@@ -3,6 +3,7 @@
 TensorFlow is imported lazily so the API can boot and serve /health
 on machines without TF installed. The model is loaded once per worker.
 """
+import logging
 import os
 import threading
 
@@ -10,6 +11,8 @@ import numpy as np
 from PIL import Image
 
 import config
+
+logger = logging.getLogger(__name__)
 
 IMG_SIZE = (224, 224)
 
@@ -53,7 +56,8 @@ def get_model():
 
             _model = tf.keras.models.load_model(config.MODEL_PATH, compile=False)
         except Exception:
-            # Never expose stack traces or filesystem paths to clients.
+            # Log the real cause server-side; clients only get a safe message.
+            logger.exception("Failed to load the model from the configured path.")
             _model_error = "The model could not be loaded on the server."
         return _model, _model_error
 

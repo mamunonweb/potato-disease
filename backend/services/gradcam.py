@@ -3,11 +3,21 @@
 Every function takes the model as an argument so nothing depends on
 module-level singletons. Grad-CAM is optional: failures degrade to a
 None heatmap instead of failing the prediction.
+
+Keras 3 models loaded from disk do not reliably expose `.output`, so
+the grad model is built by re-tracing the layer stack on a fresh input
+and capturing the requested convolutional layer's output along the way.
 """
 import numpy as np
 from PIL import Image
 
 from services.model import IMG_SIZE
+
+
+def _conv2d_cls():
+    import tensorflow as tf
+
+    return tf.keras.layers.Conv2D
 
 
 def find_gradcam_target(container):
@@ -25,41 +35,58 @@ def find_gradcam_target(container):
     return None, None
 
 
-def _conv2d_cls():
+def _trace_layers(layers, x, conv_layer):
+    """Apply layers in order, capturing the conv layer's output."""
+    conv_output = None
+    for layer in layers:
+        if isinstance(layer, _input_layer_cls()):
+            continue
+        x = layer(x)
+        if layer is conv_layer and conv_output is None:
+            conv_output = x
+    return x, conv_output
+
+
+def _input_layer_cls():
     import tensorflow as tf
 
-    return tf.keras.layers.Conv2D
+    return tf.keras.layers.InputLayer
 
 
 def get_gradcam_model(model):
-    """Build a Grad-CAM model; handles nested model/backbone layouts."""
-    conv_layer, owner = find_gradcam_target(model)
+    """Build a Grad-CAM model; handles flat and nested model layouts."""
+    import tensorflow as tf
 
+    conv_layer, owner = find_gradcam_target(model)
     if conv_layer is None:
         raise ValueError(
             "No convolutional layer was found in the loaded model."
         )
 
-    import tensorflow as tf
+    input_tensor = tf.keras.Input(shape=(*IMG_SIZE, 3))
 
     if owner is model:
-        return tf.keras.Model(
-            inputs=model.inputs,
-            outputs=[conv_layer.output, model.output],
-        ), conv_layer.name
+        final_output, conv_output = _trace_layers(
+            model.layers, input_tensor, conv_layer
+        )
+    else:
+        owner_index = next(
+            i for i, layer in enumerate(model.layers) if layer is owner
+        )
+        owner_output, conv_output = _trace_layers(
+            owner.layers, input_tensor, conv_layer
+        )
+        final_output, _ = _trace_layers(
+            model.layers[owner_index + 1:], owner_output, conv_layer
+        )
 
-    owner_index = next(
-        i for i, layer in enumerate(model.layers) if layer is owner
-    )
-
-    x = owner.output
-    for layer in model.layers[owner_index + 1:]:
-        if isinstance(layer, tf.keras.layers.InputLayer):
-            continue
-        x = layer(x)
+    if conv_output is None:
+        raise ValueError(
+            "The selected convolutional layer is not on the traced path."
+        )
 
     grad_model = tf.keras.Model(
-        inputs=owner.input, outputs=[conv_layer.output, x]
+        inputs=input_tensor, outputs=[conv_output, final_output]
     )
     return grad_model, conv_layer.name
 
