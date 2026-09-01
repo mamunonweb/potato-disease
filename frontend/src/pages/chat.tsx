@@ -6,29 +6,15 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Textarea } from '@/components/ui/textarea'
+import { useChat } from '@/context/chat'
 import { usePrediction } from '@/context/prediction'
 import { ApiError, streamChat } from '@/lib/api'
 import { cn } from '@/lib/utils'
 
-interface ChatMessage {
-  role: 'user' | 'assistant'
-  content: string
-}
-
 export function ChatPage() {
   const { prediction } = usePrediction()
-  const [messages, setMessages] = useState<ChatMessage[]>(() =>
-    prediction
-      ? [
-          {
-            role: 'assistant',
-            content: `Your leaf was classified as ${prediction.display_name} with ${(prediction.confidence * 100).toFixed(1)}% confidence. Ask me anything about it — symptoms, causes, or what to do next.`,
-          },
-        ]
-      : [],
-  )
+  const { messages, setMessages, streaming, setStreaming } = useChat()
   const [input, setInput] = useState('')
-  const [streaming, setStreaming] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
