@@ -96,15 +96,15 @@ export function ChatPage() {
   }
 
   return (
-    <div className="mx-auto flex h-[calc(100svh-9rem)] w-full max-w-2xl flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
+    <div className="mx-auto flex h-[calc(100svh-10rem)] min-h-[420px] w-full max-w-2xl flex-col gap-4">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-2">
         <h1 className="text-xl font-semibold">Disease assistant</h1>
         <Badge variant={prediction.predicted_class === 'Potato___healthy' ? 'secondary' : 'destructive'}>
           {prediction.display_name}
         </Badge>
       </div>
 
-      <ScrollArea className="flex-1 rounded-lg border">
+      <ScrollArea className="min-h-0 flex-1 rounded-lg border">
         <div className="flex flex-col gap-3 p-4">
           {messages.map((message, index) => (
             <div
@@ -141,7 +141,7 @@ export function ChatPage() {
         </div>
       </ScrollArea>
 
-      <div className="flex items-end gap-2">
+      <div className="flex shrink-0 items-end gap-2">
         <Textarea
           value={input}
           onChange={(event) => setInput(event.target.value)}
@@ -166,7 +166,7 @@ export function ChatPage() {
         </Button>
       </div>
 
-      <p className="text-xs text-muted-foreground">{prediction.disclaimer}</p>
+      <p className="shrink-0 text-xs text-muted-foreground">{prediction.disclaimer}</p>
     </div>
   )
 }
