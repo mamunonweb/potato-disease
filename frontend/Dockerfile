@@ -8,6 +8,8 @@ RUN --mount=type=cache,target=/root/.bun/install/cache \
 COPY . .
 ARG VITE_API_BASE_URL=""
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+ARG VITE_SITE_URL=""
+ENV VITE_SITE_URL=$VITE_SITE_URL
 RUN bun run build
 
 FROM nginx:1.29-alpine

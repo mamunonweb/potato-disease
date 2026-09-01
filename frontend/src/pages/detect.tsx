@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router'
 import { Loader2, ScanSearch } from 'lucide-react'
 import { toast } from 'sonner'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -58,14 +59,38 @@ export function DetectPage() {
   }
 
   return (
-    <Card className="mx-auto w-full max-w-xl">
-      <CardHeader className="text-center">
-        <CardTitle className="text-xl">Analyze a potato leaf</CardTitle>
-        <CardDescription>
-          Upload a clear photo of a potato leaf. The CNN predicts the
-          condition and Grad-CAM shows where it looked.
-        </CardDescription>
-      </CardHeader>
+    <div className="flex flex-col gap-8">
+      <section className="grid items-center gap-6 overflow-hidden rounded-2xl border bg-gradient-to-br from-primary/10 via-accent/40 to-background p-6 sm:p-8 lg:grid-cols-[1.2fr_1fr]">
+        <div className="flex flex-col gap-3">
+          <Badge className="w-fit" variant="secondary">
+            Explainable CNN · Grad-CAM · AI chat
+          </Badge>
+          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+            Spot potato diseases{' '}
+            <span className="text-primary">in seconds</span>
+          </h1>
+          <p className="max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base">
+            Upload a leaf photo and get a prediction with a heatmap showing
+            exactly where the model looked — then ask the AI assistant what to
+            do about it.
+          </p>
+        </div>
+        <img
+          src="/og-image.png"
+          alt="Potato leaf with Grad-CAM attention overlay"
+          className="hidden w-full rounded-xl border shadow-lg lg:block"
+          loading="eager"
+        />
+      </section>
+
+      <Card className="mx-auto w-full max-w-xl">
+        <CardHeader className="text-center">
+          <CardTitle className="text-xl">Analyze a potato leaf</CardTitle>
+          <CardDescription>
+            Upload a clear photo of a potato leaf. The CNN predicts the
+            condition and Grad-CAM shows where it looked.
+          </CardDescription>
+        </CardHeader>
       <CardContent className="flex flex-col gap-4">
         {previewUrl ? (
           <button
@@ -140,6 +165,7 @@ export function DetectPage() {
           </AlertDescription>
         </Alert>
       </CardContent>
-    </Card>
+      </Card>
+    </div>
   )
 }
