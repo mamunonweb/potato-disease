@@ -2,6 +2,7 @@ import { Link, Navigate } from 'react-router'
 import {
   Bug,
   CheckCircle2,
+  Info,
   MessageCircle,
   ShieldCheck,
   Stethoscope,
@@ -44,7 +45,12 @@ export function InfoPage() {
       </div>
 
       <Card>
-        <CardContent className="pt-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Info className="size-4 text-primary" /> Overview
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
           <p className="text-sm leading-relaxed">{guidance.description}</p>
         </CardContent>
       </Card>
