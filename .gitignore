@@ -5,3 +5,4 @@ prediction_history.csv
 # Python
 __pycache__/
 *.pyc
+.ruff_cache/
