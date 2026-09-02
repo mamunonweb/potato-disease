@@ -36,6 +36,31 @@ export interface PredictionResponse {
   disclaimer: string
 }
 
+export interface BatchItemSuccess {
+  status: 'ok'
+  filename: string
+  predicted_class: string
+  display_name: string
+  confidence: number
+  top_predictions: TopPrediction[]
+}
+
+export interface BatchItemError {
+  status: 'error'
+  filename: string
+  error: string
+}
+
+export type BatchItem = BatchItemSuccess | BatchItemError
+
+export interface BatchResponse {
+  results: BatchItem[]
+  healthy_count: number
+  disease_count: number
+  failed_count: number
+  disclaimer: string
+}
+
 export interface ChatMessagePayload {
   role: 'user' | 'assistant'
   content: string

@@ -20,6 +20,7 @@ ALLOWED_ORIGINS = [
 ]
 
 MAX_UPLOAD_MB = int(os.getenv("MAX_UPLOAD_MB", "10"))
+MAX_BATCH_FILES = int(os.getenv("MAX_BATCH_FILES", "12"))
 ALLOWED_CONTENT_TYPES = {"image/jpeg", "image/png"}
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png"}
 

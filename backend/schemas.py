@@ -1,5 +1,5 @@
 """Pydantic schemas for API request/response payloads."""
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field
 
@@ -39,6 +39,35 @@ class PredictionResponse(BaseModel):
     gradcam: GradcamInfo | None = None
     gradcam_note: str | None = None
     guidance: GuidanceInfo
+    disclaimer: str
+
+
+class BatchItemSuccess(BaseModel):
+    status: Literal["ok"]
+    filename: str
+    predicted_class: str
+    display_name: str
+    confidence: float
+    top_predictions: list[TopPrediction]
+
+
+class BatchItemError(BaseModel):
+    status: Literal["error"]
+    filename: str
+    error: str
+
+
+BatchItem = Annotated[
+    BatchItemSuccess | BatchItemError,
+    Field(discriminator="status"),
+]
+
+
+class BatchResponse(BaseModel):
+    results: list[BatchItem]
+    healthy_count: int
+    disease_count: int
+    failed_count: int
     disclaimer: str
 
 

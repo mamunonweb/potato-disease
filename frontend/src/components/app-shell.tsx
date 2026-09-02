@@ -1,6 +1,13 @@
 import type { ComponentType } from 'react'
 import { NavLink } from 'react-router'
-import { BarChart3, BookOpen, Leaf, MessageCircle, ScanSearch } from 'lucide-react'
+import {
+  BarChart3,
+  BookOpen,
+  Layers,
+  Leaf,
+  MessageCircle,
+  ScanSearch,
+} from 'lucide-react'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { cn } from '@/lib/utils'
 
@@ -13,6 +20,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { to: '/', label: 'Detect', icon: ScanSearch },
   { to: '/results', label: 'Results', icon: BarChart3 },
+  { to: '/batch', label: 'Batch', icon: Layers },
   { to: '/chat', label: 'Chat', icon: MessageCircle },
   { to: '/info', label: 'Info', icon: BookOpen },
 ]

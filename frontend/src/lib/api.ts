@@ -1,4 +1,5 @@
 import type {
+  BatchResponse,
   ChatRequestBody,
   ChatStreamEvent,
   PredictionResponse,
@@ -27,6 +28,17 @@ export async function predictImage(file: File): Promise<PredictionResponse> {
   })
   if (!res.ok) throw new ApiError(await errorDetail(res))
   return (await res.json()) as PredictionResponse
+}
+
+export async function predictBatch(files: File[]): Promise<BatchResponse> {
+  const form = new FormData()
+  for (const file of files) form.append('images', file)
+  const res = await fetch(`${API_BASE_URL}/api/predict/batch`, {
+    method: 'POST',
+    body: form,
+  })
+  if (!res.ok) throw new ApiError(await errorDetail(res))
+  return (await res.json()) as BatchResponse
 }
 
 export async function streamChat(
