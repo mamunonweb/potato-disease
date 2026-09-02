@@ -9,6 +9,11 @@ services:
   potato-disease-frontend:
     ports: !override []
 
+    # Optional: set for absolute Open Graph image URLs in link previews.
+    # build:
+    #   args:
+    #     VITE_SITE_URL: https://potato.example.com
+
     labels:
       - 'traefik.enable=true'
       - 'traefik.docker.network=proxy'
