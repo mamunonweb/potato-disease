@@ -83,7 +83,7 @@ export function ChatPage() {
   }
 
   return (
-    <div className="mx-auto flex h-[calc(100svh-10rem)] min-h-[420px] w-full max-w-2xl flex-col gap-4">
+    <div className="mx-auto flex min-h-105 w-full max-w-2xl flex-1 flex-col gap-4">
       <div className="flex shrink-0 flex-wrap items-center justify-between gap-2">
         <h1 className="text-xl font-semibold">Disease assistant</h1>
         <Badge variant={prediction.predicted_class === 'Potato___healthy' ? 'secondary' : 'destructive'}>
@@ -158,8 +158,6 @@ export function ChatPage() {
           <Send className="size-4" />
         </Button>
       </div>
-
-      <p className="shrink-0 text-xs text-muted-foreground">{prediction.disclaimer}</p>
     </div>
   )
 }

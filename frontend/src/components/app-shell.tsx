@@ -57,12 +57,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </nav>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6">{children}</main>
+      <main className="mx-auto flex w-full max-w-5xl min-h-0 flex-1 flex-col px-4 py-6">{children}</main>
       <footer className="border-t py-4">
         <p className="mx-auto w-full max-w-5xl px-4 text-xs text-muted-foreground">
           AI-based preliminary classification — not a definitive diagnosis.
-          For serious or rapidly spreading crop disease, consult a qualified
-          agricultural professional.
         </p>
       </footer>
     </div>

@@ -163,8 +163,6 @@ export function ResultsPage() {
           </CardContent>
         </Card>
       </div>
-
-      <p className="text-xs text-muted-foreground">{prediction.disclaimer}</p>
     </div>
   )
 }

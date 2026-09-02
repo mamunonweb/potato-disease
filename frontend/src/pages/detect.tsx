@@ -3,7 +3,6 @@ import { useMutation } from '@tanstack/react-query'
 import { useNavigate } from 'react-router'
 import { Loader2, ScanSearch } from 'lucide-react'
 import { toast } from 'sonner'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -159,13 +158,6 @@ export function DetectPage() {
             </>
           )}
         </Button>
-        <Alert>
-          <AlertDescription className="text-xs">
-            This is an AI-based preliminary classification, not a
-            definitive diagnosis. For serious or rapidly spreading crop
-            disease, consult a qualified agricultural professional.
-          </AlertDescription>
-        </Alert>
       </CardContent>
       </Card>
     </div>

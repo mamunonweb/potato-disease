@@ -7,7 +7,6 @@ import {
   ShieldCheck,
   Stethoscope,
 } from 'lucide-react'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -84,12 +83,6 @@ export function InfoPage() {
           </Link>
         </Button>
       </div>
-
-      <Alert>
-        <AlertDescription className="text-xs">
-          {prediction.disclaimer}
-        </AlertDescription>
-      </Alert>
     </div>
   )
 }

@@ -268,9 +268,6 @@ export function BatchPage() {
             >
               <Download className="size-4" /> Download CSV
             </Button>
-            <p className="text-xs text-muted-foreground">
-              {response.disclaimer}
-            </p>
           </CardContent>
         </Card>
       )}
