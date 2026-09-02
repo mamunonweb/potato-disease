@@ -2,18 +2,12 @@
 import base64
 import io
 import logging
-import os
 
 import numpy as np
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from PIL import Image
 
-from config import (
-    ALLOWED_CONTENT_TYPES,
-    ALLOWED_EXTENSIONS,
-    MAX_BATCH_FILES,
-    MAX_UPLOAD_MB,
-)
+from config import MAX_BATCH_FILES, MAX_UPLOAD_MB
 from schemas import (
     BatchItemError,
     BatchItemSuccess,
@@ -24,7 +18,7 @@ from schemas import (
     PredictionResponse,
     TopPrediction,
 )
-from services import gradcam, guidance, model
+from services import gradcam, guidance, model, uploads
 
 router = APIRouter()
 
@@ -37,32 +31,9 @@ DISCLAIMER = (
 )
 
 
-def _validate_upload(file: UploadFile) -> None:
-    ext = os.path.splitext(file.filename or "")[1].lower()
-    if file.content_type not in ALLOWED_CONTENT_TYPES or ext not in ALLOWED_EXTENSIONS:
-        raise HTTPException(
-            status_code=415,
-            detail="Unsupported file type. Upload a JPG or PNG image.",
-        )
-
-
 @router.post("/api/predict")
 async def predict(image: UploadFile = File(...)) -> PredictionResponse:
-    _validate_upload(image)
-    data = await image.read()
-    if len(data) > MAX_UPLOAD_MB * 1024 * 1024:
-        raise HTTPException(
-            status_code=413,
-            detail=f"Image too large. Maximum size is {MAX_UPLOAD_MB} MB.",
-        )
-
-    try:
-        pil_image = Image.open(io.BytesIO(data))
-    except Exception:
-        raise HTTPException(
-            status_code=422,
-            detail="The uploaded file is not a readable image.",
-        )
+    pil_image = await uploads.read_image(image)
 
     try:
         predicted_class, confidence, probabilities = model.predict_image(pil_image)
@@ -156,7 +127,7 @@ async def predict_batch(
     for file in images:
         filename = file.filename or "unknown"
         try:
-            _validate_upload(file)
+            uploads.validate_upload(file)
             data = await file.read()
             if len(data) > MAX_UPLOAD_MB * 1024 * 1024:
                 raise ValueError(

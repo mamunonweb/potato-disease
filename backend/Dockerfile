@@ -9,6 +9,12 @@ RUN apt-get update \
 
 WORKDIR /app
 
+# TensorFlow is large and rarely changes: keep it in its own cached layer
+# so app-dependency or code changes do not reinstall it.
+COPY backend/requirements.tf.txt /app/backend/requirements.tf.txt
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install -r /app/backend/requirements.tf.txt
+
 COPY backend/requirements.txt /app/backend/requirements.txt
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install -r /app/backend/requirements.txt

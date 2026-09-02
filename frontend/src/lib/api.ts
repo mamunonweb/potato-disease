@@ -41,6 +41,17 @@ export async function predictBatch(files: File[]): Promise<BatchResponse> {
   return (await res.json()) as BatchResponse
 }
 
+export async function reportPdf(file: File): Promise<Blob> {
+  const form = new FormData()
+  form.append('image', file)
+  const res = await fetch(`${API_BASE_URL}/api/report`, {
+    method: 'POST',
+    body: form,
+  })
+  if (!res.ok) throw new ApiError(await errorDetail(res))
+  return await res.blob()
+}
+
 export async function streamChat(
   body: ChatRequestBody,
   onEvent: (event: ChatStreamEvent) => void,

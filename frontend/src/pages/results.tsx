@@ -1,5 +1,7 @@
+import { useMutation } from '@tanstack/react-query'
 import { Link, Navigate } from 'react-router'
-import { BookOpen, MessageCircle } from 'lucide-react'
+import { BookOpen, FileDown, MessageCircle } from 'lucide-react'
+import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -11,6 +13,7 @@ import {
 import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
 import { usePrediction } from '@/context/prediction'
+import { reportPdf } from '@/lib/api'
 
 const DISPLAY_NAMES: Record<string, string> = {
   Potato___Early_blight: 'Early Blight',
@@ -25,7 +28,25 @@ const SEVERITY_STYLES: Record<string, string> = {
 }
 
 export function ResultsPage() {
-  const { prediction, imageUrl } = usePrediction()
+  const { prediction, imageUrl, file } = usePrediction()
+
+  const reportMutation = useMutation({
+    mutationFn: () => {
+      if (!file) return Promise.reject(new Error('Original image is gone.'))
+      return reportPdf(file)
+    },
+    onSuccess: (blob) => {
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = 'potato_disease_report.pdf'
+      link.click()
+      URL.revokeObjectURL(url)
+      toast.success('PDF report downloaded.')
+    },
+    onError: (error: Error) => toast.error(error.message),
+  })
+
   if (!prediction || !imageUrl) return <Navigate to="/" replace />
 
   const isHealthy = prediction.predicted_class === 'Potato___healthy'
@@ -129,6 +150,14 @@ export function ResultsPage() {
                 <Link to="/info">
                   <BookOpen className="size-4" /> Disease information
                 </Link>
+              </Button>
+              <Button
+                variant="outline"
+                disabled={!file || reportMutation.isPending}
+                onClick={() => reportMutation.mutate()}
+              >
+                <FileDown className="size-4" />
+                {reportMutation.isPending ? 'Generating…' : 'PDF report'}
               </Button>
             </div>
           </CardContent>
