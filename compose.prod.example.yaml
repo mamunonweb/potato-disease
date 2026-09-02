@@ -9,10 +9,8 @@ services:
   potato-disease-frontend:
     ports: !override []
 
-    # Optional: set for absolute Open Graph image URLs in link previews.
-    # build:
-    #   args:
-    #     VITE_SITE_URL: https://potato.example.com
+    # For Open Graph link previews, set VITE_SITE_URL=https://potato.example.com
+    # in .env (compose passes it to the frontend build automatically).
 
     labels:
       - 'traefik.enable=true'

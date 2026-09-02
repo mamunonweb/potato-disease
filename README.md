@@ -121,12 +121,10 @@ Routing uses a single domain so the browser talks to the API same-origin:
 
    Edit `compose.prod.yaml` and replace `potato.example.com` with the DNS
    name that points to the server. For Open Graph link previews (social
-   messengers), also add the site URL build argument to the frontend build:
-   ```yaml
-   potato-disease-frontend:
-     build:
-       args:
-         VITE_SITE_URL: https://potato.example.com
+   messengers), also add the site URL to `.env`; compose passes it to the
+   frontend build automatically:
+   ```bash
+   VITE_SITE_URL=https://potato.example.com
    ```
 
 3. **Confirm the Traefik network exists**
