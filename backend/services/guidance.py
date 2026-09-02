@@ -4,8 +4,8 @@ Ported from the Streamlit app. The built-in DISEASE_INFO is the
 fallback used automatically when OpenRouter is unavailable,
 rate-limited, or not configured.
 """
+
 import json
-import os
 import threading
 import time
 from urllib.error import HTTPError, URLError

@@ -1,4 +1,5 @@
 """Pydantic schemas for API request/response payloads."""
+
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field

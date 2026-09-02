@@ -104,7 +104,7 @@ export function CameraCapture({ onCapture }: CameraCaptureProps) {
         </DialogHeader>
         <div className="overflow-hidden rounded-lg border bg-black">
           {error ? (
-            <p className="p-6 text-center text-sm text-muted-foreground">
+            <p className="text-muted-foreground p-6 text-center text-sm">
               {error}
             </p>
           ) : (
@@ -117,11 +117,7 @@ export function CameraCapture({ onCapture }: CameraCaptureProps) {
           )}
         </div>
         <DialogFooter>
-          <Button
-            className="w-full"
-            disabled={!ready}
-            onClick={capture}
-          >
+          <Button className="w-full" disabled={!ready} onClick={capture}>
             {starting ? (
               <>
                 <Loader2 className="size-4 animate-spin" /> Starting camera…

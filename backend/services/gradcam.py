@@ -8,6 +8,7 @@ Keras 3 models loaded from disk do not reliably expose `.output`, so
 the grad model is built by re-tracing the layer stack on a fresh input
 and capturing the requested convolutional layer's output along the way.
 """
+
 import numpy as np
 from PIL import Image
 
@@ -59,35 +60,21 @@ def get_gradcam_model(model):
 
     conv_layer, owner = find_gradcam_target(model)
     if conv_layer is None:
-        raise ValueError(
-            "No convolutional layer was found in the loaded model."
-        )
+        raise ValueError("No convolutional layer was found in the loaded model.")
 
     input_tensor = tf.keras.Input(shape=(*IMG_SIZE, 3))
 
     if owner is model:
-        final_output, conv_output = _trace_layers(
-            model.layers, input_tensor, conv_layer
-        )
+        final_output, conv_output = _trace_layers(model.layers, input_tensor, conv_layer)
     else:
-        owner_index = next(
-            i for i, layer in enumerate(model.layers) if layer is owner
-        )
-        owner_output, conv_output = _trace_layers(
-            owner.layers, input_tensor, conv_layer
-        )
-        final_output, _ = _trace_layers(
-            model.layers[owner_index + 1:], owner_output, conv_layer
-        )
+        owner_index = next(i for i, layer in enumerate(model.layers) if layer is owner)
+        owner_output, conv_output = _trace_layers(owner.layers, input_tensor, conv_layer)
+        final_output, _ = _trace_layers(model.layers[owner_index + 1 :], owner_output, conv_layer)
 
     if conv_output is None:
-        raise ValueError(
-            "The selected convolutional layer is not on the traced path."
-        )
+        raise ValueError("The selected convolutional layer is not on the traced path.")
 
-    grad_model = tf.keras.Model(
-        inputs=input_tensor, outputs=[conv_output, final_output]
-    )
+    grad_model = tf.keras.Model(inputs=input_tensor, outputs=[conv_output, final_output])
     return grad_model, conv_layer.name
 
 
@@ -106,9 +93,7 @@ def make_gradcam(model, image, class_index):
 
     gradients = tape.gradient(score, conv_output)
     if gradients is None:
-        raise ValueError(
-            "Gradients were not produced for the selected layer."
-        )
+        raise ValueError("Gradients were not produced for the selected layer.")
 
     if len(conv_output.shape) != 4:
         raise ValueError("Unsupported Grad-CAM feature map shape.")
@@ -131,9 +116,7 @@ def make_overlay(image, heatmap):
     """Blend a dependency-free RGB heatmap over the original image."""
     original = image.convert("RGB").resize(IMG_SIZE)
 
-    heat = Image.fromarray(
-        np.uint8(np.clip(heatmap * 255, 0, 255))
-    ).resize(IMG_SIZE)
+    heat = Image.fromarray(np.uint8(np.clip(heatmap * 255, 0, 255))).resize(IMG_SIZE)
     heat_array = np.asarray(heat, dtype=np.float32) / 255.0
 
     red = heat_array

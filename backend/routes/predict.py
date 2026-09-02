@@ -1,4 +1,5 @@
 """Prediction endpoint: upload → prediction + Grad-CAM + guidance."""
+
 import base64
 import io
 import logging
@@ -40,9 +41,7 @@ async def predict(image: UploadFile = File(...)) -> PredictionResponse:
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc))
 
-    probabilities_list = [
-        float(p) for p in np.asarray(probabilities).reshape(-1)
-    ]
+    probabilities_list = [float(p) for p in np.asarray(probabilities).reshape(-1)]
     top = sorted(
         zip(model.CLASS_NAMES, probabilities_list),
         key=lambda pair: pair[1],
@@ -62,9 +61,9 @@ async def predict(image: UploadFile = File(...)) -> PredictionResponse:
         overlay = gradcam.make_overlay(pil_image, heatmap)
         overlay_buffer = io.BytesIO()
         overlay.save(overlay_buffer, format="PNG")
-        data_uri = "data:image/png;base64," + base64.b64encode(
-            overlay_buffer.getvalue()
-        ).decode("ascii")
+        data_uri = "data:image/png;base64," + base64.b64encode(overlay_buffer.getvalue()).decode(
+            "ascii"
+        )
         gradcam_payload = GradcamInfo(
             image_data_uri=data_uri,
             layer_name=layer_name,
@@ -84,10 +83,7 @@ async def predict(image: UploadFile = File(...)) -> PredictionResponse:
         predicted_class=predicted_class,
         display_name=model.DISPLAY_NAMES[predicted_class],
         confidence=confidence,
-        probabilities={
-            name: float(p)
-            for name, p in zip(model.CLASS_NAMES, probabilities_list)
-        },
+        probabilities={name: float(p) for name, p in zip(model.CLASS_NAMES, probabilities_list)},
         top_predictions=[
             TopPrediction(
                 className=name,
@@ -130,20 +126,14 @@ async def predict_batch(
             uploads.validate_upload(file)
             data = await file.read()
             if len(data) > MAX_UPLOAD_MB * 1024 * 1024:
-                raise ValueError(
-                    f"Image too large. Maximum size is {MAX_UPLOAD_MB} MB."
-                )
+                raise ValueError(f"Image too large. Maximum size is {MAX_UPLOAD_MB} MB.")
             try:
                 pil_image = Image.open(io.BytesIO(data))
             except Exception:
                 raise ValueError("The file is not a readable image.")
 
-            predicted_class, confidence, probabilities = model.predict_image(
-                pil_image
-            )
-            probabilities_list = [
-                float(p) for p in np.asarray(probabilities).reshape(-1)
-            ]
+            predicted_class, confidence, probabilities = model.predict_image(pil_image)
+            probabilities_list = [float(p) for p in np.asarray(probabilities).reshape(-1)]
             top = sorted(
                 zip(model.CLASS_NAMES, probabilities_list),
                 key=lambda pair: pair[1],
@@ -167,17 +157,9 @@ async def predict_batch(
                 )
             )
         except HTTPException as exc:
-            results.append(
-                BatchItemError(
-                    status="error", filename=filename, error=exc.detail
-                )
-            )
+            results.append(BatchItemError(status="error", filename=filename, error=exc.detail))
         except ValueError as exc:
-            results.append(
-                BatchItemError(
-                    status="error", filename=filename, error=str(exc)
-                )
-            )
+            results.append(BatchItemError(status="error", filename=filename, error=str(exc)))
         except Exception:
             logger.exception("Batch item prediction failed for %s.", filename)
             results.append(
@@ -188,12 +170,8 @@ async def predict_batch(
                 )
             )
 
-    successes = [
-        item for item in results if isinstance(item, BatchItemSuccess)
-    ]
-    healthy_count = sum(
-        1 for item in successes if item.predicted_class == HEALTHY_CLASS
-    )
+    successes = [item for item in results if isinstance(item, BatchItemSuccess)]
+    healthy_count = sum(1 for item in successes if item.predicted_class == HEALTHY_CLASS)
     disease_count = len(successes) - healthy_count
     failed_count = len(results) - len(successes)
 

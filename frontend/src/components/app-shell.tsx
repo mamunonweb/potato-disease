@@ -27,11 +27,11 @@ const NAV_ITEMS: NavItem[] = [
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-svh flex-col bg-background">
-      <header className="sticky top-0 z-10 border-b bg-background/90 backdrop-blur">
+    <div className="bg-background flex min-h-svh flex-col">
+      <header className="bg-background/90 sticky top-0 z-10 border-b backdrop-blur">
         <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-4 px-4">
           <NavLink to="/" className="flex items-center gap-2 font-semibold">
-            <Leaf className="size-5 text-primary" />
+            <Leaf className="text-primary size-5" />
             <span className="hidden sm:inline">Potato Disease Detection</span>
             <span className="sm:hidden">Potato</span>
           </NavLink>
@@ -57,9 +57,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </nav>
         </div>
       </header>
-      <main className="mx-auto flex w-full max-w-5xl min-h-0 flex-1 flex-col px-4 py-6">{children}</main>
+      <main className="mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col px-4 py-6">
+        {children}
+      </main>
       <footer className="border-t py-4">
-        <p className="mx-auto w-full max-w-5xl px-4 text-xs text-muted-foreground">
+        <p className="text-muted-foreground mx-auto w-full max-w-5xl px-4 text-xs">
           AI-based preliminary classification — not a definitive diagnosis.
         </p>
       </footer>

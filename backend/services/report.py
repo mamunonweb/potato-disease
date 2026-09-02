@@ -1,4 +1,5 @@
 """PDF report generation for a single analyzed leaf image."""
+
 from datetime import datetime
 from io import BytesIO
 
@@ -46,9 +47,7 @@ def _png_bytes(image: Image.Image) -> BytesIO:
 def generate_report(pil_image: Image.Image, filename: str) -> bytes:
     predicted_class, confidence, probabilities = model.predict_image(pil_image)
 
-    probabilities_list = [
-        float(p) for p in np.asarray(probabilities).reshape(-1)
-    ]
+    probabilities_list = [float(p) for p in np.asarray(probabilities).reshape(-1)]
     top = sorted(
         zip(model.CLASS_NAMES, probabilities_list),
         key=lambda pair: pair[1],
@@ -68,9 +67,7 @@ def generate_report(pil_image: Image.Image, filename: str) -> bytes:
         heatmap, layer_name = gradcam.make_gradcam(
             current_model, pil_image, model.CLASS_NAMES.index(predicted_class)
         )
-        severity_ratio, severity_level = gradcam.estimate_attention_severity(
-            heatmap
-        )
+        severity_ratio, severity_level = gradcam.estimate_attention_severity(heatmap)
         overlay_png = _png_bytes(gradcam.make_overlay(pil_image, heatmap))
         gradcam_available = True
     except Exception:
@@ -126,9 +123,7 @@ def generate_report(pil_image: Image.Image, filename: str) -> bytes:
     original_png = _png_bytes(pil_image)
     cells: list = [ReportLabImage(original_png, width=3.1 * inch, height=3.1 * inch)]
     if overlay_png is not None:
-        cells.append(
-            ReportLabImage(overlay_png, width=3.1 * inch, height=3.1 * inch)
-        )
+        cells.append(ReportLabImage(overlay_png, width=3.1 * inch, height=3.1 * inch))
     else:
         cells.append(
             Paragraph(
@@ -154,12 +149,8 @@ def generate_report(pil_image: Image.Image, filename: str) -> bytes:
     story.append(Paragraph("Top-3 Class Probabilities", styles["Heading2"]))
     probability_rows = [["Rank", "Class", "Probability"]]
     for rank, (class_name, value) in enumerate(top, 1):
-        probability_rows.append(
-            [str(rank), model.DISPLAY_NAMES[class_name], f"{value * 100:.2f}%"]
-        )
-    probability_table = Table(
-        probability_rows, colWidths=[0.7 * inch, 3.3 * inch, 2.0 * inch]
-    )
+        probability_rows.append([str(rank), model.DISPLAY_NAMES[class_name], f"{value * 100:.2f}%"])
+    probability_table = Table(probability_rows, colWidths=[0.7 * inch, 3.3 * inch, 2.0 * inch])
     probability_table.setStyle(
         TableStyle(
             [

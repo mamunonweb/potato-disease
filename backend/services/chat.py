@@ -4,10 +4,11 @@ The CNN stays responsible for the prediction; the chat only discusses
 the detected condition. Guidance is general information, not a
 definitive diagnosis.
 """
+
 import json
 
 import config
-from services.guidance import DISEASE_INFO, get_disease_info
+from services.guidance import get_disease_info
 from services.model import DISPLAY_NAMES
 
 SYSTEM_PROMPT_TEMPLATE = (
@@ -32,9 +33,7 @@ MAX_MESSAGE_CHARS = config.CHAT_MAX_MESSAGE_CHARS
 
 def _build_system_prompt(predicted_class, confidence):
     info, generated = get_disease_info(predicted_class)
-    display_name = DISPLAY_NAMES.get(
-        predicted_class, info.get("name", predicted_class)
-    )
+    display_name = DISPLAY_NAMES.get(predicted_class, info.get("name", predicted_class))
     prompt = SYSTEM_PROMPT_TEMPLATE.format(
         display_name=display_name,
         confidence_pct=confidence * 100,
@@ -47,7 +46,7 @@ def _build_system_prompt(predicted_class, confidence):
 def _trim_history(history):
     """Keep only valid alternating turns, capped and length-limited."""
     trimmed = []
-    for turn in (history or [])[-MAX_HISTORY_TURNS * 2:]:
+    for turn in (history or [])[-MAX_HISTORY_TURNS * 2 :]:
         if not isinstance(turn, dict):
             continue
         role = turn.get("role")
@@ -82,8 +81,7 @@ def chat_reply(predicted_class, confidence, message, history):
     content = response.choices[0].message.content
     if not isinstance(content, str) or not content.strip():
         return (
-            "Sorry, I could not generate a reply right now. Please try "
-            "again in a moment.",
+            "Sorry, I could not generate a reply right now. Please try again in a moment.",
             source,
         )
     return content.strip(), source

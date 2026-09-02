@@ -1,4 +1,5 @@
 """FastAPI application: potato disease detection backend."""
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 

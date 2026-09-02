@@ -44,8 +44,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const setMessages: Dispatch<SetStateAction<ChatMessage[]>> = (action) => {
     setState((prev) => ({
       ...prev,
-      messages:
-        typeof action === 'function' ? action(prev.messages) : action,
+      messages: typeof action === 'function' ? action(prev.messages) : action,
     }))
   }
 

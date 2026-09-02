@@ -60,7 +60,7 @@ export function DetectPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <section className="grid items-center gap-6 overflow-hidden rounded-2xl border bg-gradient-to-br from-primary/10 via-accent/40 to-background p-6 sm:p-8 lg:grid-cols-[1.2fr_1fr]">
+      <section className="from-primary/10 via-accent/40 to-background grid items-center gap-6 overflow-hidden rounded-2xl border bg-gradient-to-br p-6 sm:p-8 lg:grid-cols-[1.2fr_1fr]">
         <div className="flex flex-col gap-3">
           <Badge className="w-fit" variant="secondary">
             Explainable CNN · Grad-CAM · AI chat
@@ -69,7 +69,7 @@ export function DetectPage() {
             Spot potato diseases{' '}
             <span className="text-primary">in seconds</span>
           </h1>
-          <p className="max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base">
+          <p className="text-muted-foreground max-w-md text-sm leading-relaxed sm:text-base">
             Upload a leaf photo and get a prediction with a heatmap showing
             exactly where the model looked — then ask the AI assistant what to
             do about it.
@@ -91,74 +91,70 @@ export function DetectPage() {
             condition and Grad-CAM shows where it looked.
           </CardDescription>
         </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        {previewUrl ? (
-          <button
-            type="button"
-            onClick={() => inputRef.current?.click()}
-            className="group relative overflow-hidden rounded-lg border"
-          >
-            <img
-              src={previewUrl}
-              alt="Selected leaf preview"
-              className="max-h-80 w-full object-contain"
-            />
-            <span className="absolute inset-x-0 bottom-0 bg-background/80 py-1 text-center text-xs text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100">
-              Click to choose a different image
-            </span>
-          </button>
-        ) : (
-          <div
-            role="button"
-            tabIndex={0}
-            onClick={() => inputRef.current?.click()}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' || event.key === ' ') {
-                inputRef.current?.click()
-              }
-            }}
-            onDragOver={(event) => event.preventDefault()}
-            onDrop={(event) => {
-              event.preventDefault()
-              selectFile(event.dataTransfer.files?.[0] ?? null)
-            }}
-            className="flex min-h-52 cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed p-6 text-center text-muted-foreground transition-colors hover:bg-accent/40"
-          >
-            <ScanSearch className="size-8" />
-            <p className="text-sm font-medium">
-              Click or drop a potato leaf image
-            </p>
-            <p className="text-xs">
-              JPG or PNG, up to {MAX_SIZE_MB} MB
-            </p>
-          </div>
-        )}
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/jpeg,image/png"
-          className="hidden"
-          onChange={(event) =>
-            selectFile(event.target.files?.[0] ?? null)
-          }
-        />
-        <CameraCapture onCapture={selectFile} />
-        <Button
-          size="lg"
-          disabled={!file || mutation.isPending}
-          onClick={() => file && mutation.mutate(file)}
-        >
-          {mutation.isPending ? (
-            <>
-              <Loader2 className="size-4 animate-spin" /> Analyzing…
-            </>
+        <CardContent className="flex flex-col gap-4">
+          {previewUrl ? (
+            <button
+              type="button"
+              onClick={() => inputRef.current?.click()}
+              className="group relative overflow-hidden rounded-lg border"
+            >
+              <img
+                src={previewUrl}
+                alt="Selected leaf preview"
+                className="max-h-80 w-full object-contain"
+              />
+              <span className="bg-background/80 text-muted-foreground absolute inset-x-0 bottom-0 py-1 text-center text-xs opacity-0 transition-opacity group-hover:opacity-100">
+                Click to choose a different image
+              </span>
+            </button>
           ) : (
-            <>
-              <ScanSearch className="size-4" /> Analyze image
-            </>
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => inputRef.current?.click()}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  inputRef.current?.click()
+                }
+              }}
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={(event) => {
+                event.preventDefault()
+                selectFile(event.dataTransfer.files?.[0] ?? null)
+              }}
+              className="text-muted-foreground hover:bg-accent/40 flex min-h-52 cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed p-6 text-center transition-colors"
+            >
+              <ScanSearch className="size-8" />
+              <p className="text-sm font-medium">
+                Click or drop a potato leaf image
+              </p>
+              <p className="text-xs">JPG or PNG, up to {MAX_SIZE_MB} MB</p>
+            </div>
           )}
-        </Button>
-      </CardContent>
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/jpeg,image/png"
+            className="hidden"
+            onChange={(event) => selectFile(event.target.files?.[0] ?? null)}
+          />
+          <CameraCapture onCapture={selectFile} />
+          <Button
+            size="lg"
+            disabled={!file || mutation.isPending}
+            onClick={() => file && mutation.mutate(file)}
+          >
+            {mutation.isPending ? (
+              <>
+                <Loader2 className="size-4 animate-spin" /> Analyzing…
+              </>
+            ) : (
+              <>
+                <ScanSearch className="size-4" /> Analyze image
+              </>
+            )}
+          </Button>
+        </CardContent>
       </Card>
     </div>
   )

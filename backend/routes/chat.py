@@ -1,4 +1,5 @@
 """Chat endpoints: non-streaming reply + SSE stream."""
+
 import json
 
 from fastapi import APIRouter, HTTPException
@@ -56,16 +57,14 @@ def chat_stream(request: ChatRequest) -> StreamingResponse:
                 request.message,
                 [turn.model_dump() for turn in request.history],
             ):
-                yield "data: " + json.dumps(
-                    {"type": "delta", "text": delta}
-                ) + "\n\n"
-            yield "data: " + json.dumps(
-                {"type": "done", "disclaimer": CHAT_DISCLAIMER}
-            ) + "\n\n"
+                yield "data: " + json.dumps({"type": "delta", "text": delta}) + "\n\n"
+            yield "data: " + json.dumps({"type": "done", "disclaimer": CHAT_DISCLAIMER}) + "\n\n"
         except Exception:
-            yield "data: " + json.dumps(
-                {"type": "error", "text": "The guidance provider is unavailable."}
-            ) + "\n\n"
+            yield (
+                "data: "
+                + json.dumps({"type": "error", "text": "The guidance provider is unavailable."})
+                + "\n\n"
+            )
 
     return StreamingResponse(
         generate(),

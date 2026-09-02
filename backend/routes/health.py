@@ -1,4 +1,5 @@
 """Health endpoints. /health never touches the model; /health/ready does."""
+
 from fastapi import APIRouter
 
 from services import model

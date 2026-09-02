@@ -1,4 +1,5 @@
 """Shared upload validation for image endpoints."""
+
 import io
 import os
 

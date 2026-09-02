@@ -4,12 +4,7 @@ import { BookOpen, FileDown, MessageCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
 import { usePrediction } from '@/context/prediction'
@@ -73,7 +68,7 @@ export function ResultsPage() {
                   alt="Uploaded potato leaf"
                   className="aspect-square w-full rounded-lg border object-contain"
                 />
-                <figcaption className="mt-1 text-center text-xs text-muted-foreground">
+                <figcaption className="text-muted-foreground mt-1 text-center text-xs">
                   Original
                 </figcaption>
               </figure>
@@ -84,18 +79,18 @@ export function ResultsPage() {
                     alt="Grad-CAM attention overlay"
                     className="aspect-square w-full rounded-lg border object-contain"
                   />
-                  <figcaption className="mt-1 text-center text-xs text-muted-foreground">
+                  <figcaption className="text-muted-foreground mt-1 text-center text-xs">
                     Attention overlay
                   </figcaption>
                 </figure>
               ) : (
-                <div className="flex aspect-square items-center justify-center rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">
+                <div className="text-muted-foreground flex aspect-square items-center justify-center rounded-lg border border-dashed p-4 text-center text-xs">
                   {prediction.gradcam_note ?? 'Grad-CAM unavailable.'}
                 </div>
               )}
             </div>
             {prediction.gradcam && (
-              <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+              <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-sm">
                 <Badge
                   className={
                     SEVERITY_STYLES[prediction.gradcam.severity.level] ?? ''
@@ -121,7 +116,7 @@ export function ResultsPage() {
               <p className="text-2xl font-semibold">
                 {prediction.display_name}
               </p>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 Confidence {(prediction.confidence * 100).toFixed(1)}%
               </p>
             </div>

@@ -86,7 +86,13 @@ export function ChatPage() {
     <div className="mx-auto flex min-h-105 w-full max-w-2xl flex-1 flex-col gap-4">
       <div className="flex shrink-0 flex-wrap items-center justify-between gap-2">
         <h1 className="text-xl font-semibold">Disease assistant</h1>
-        <Badge variant={prediction.predicted_class === 'Potato___healthy' ? 'secondary' : 'destructive'}>
+        <Badge
+          variant={
+            prediction.predicted_class === 'Potato___healthy'
+              ? 'secondary'
+              : 'destructive'
+          }
+        >
           {prediction.display_name}
         </Badge>
       </div>
@@ -102,16 +108,16 @@ export function ChatPage() {
               )}
             >
               {message.role === 'assistant' && (
-                <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                  <Bot className="size-4 text-primary" />
+                <div className="bg-primary/10 flex size-7 shrink-0 items-center justify-center rounded-full">
+                  <Bot className="text-primary size-4" />
                 </div>
               )}
               <div
                 className={cn(
                   'max-w-[85%] rounded-2xl px-4 py-2 text-sm',
                   message.role === 'user'
-                    ? 'whitespace-pre-wrap rounded-br-sm bg-primary text-primary-foreground'
-                    : 'rounded-bl-sm bg-muted text-foreground',
+                    ? 'bg-primary text-primary-foreground rounded-br-sm whitespace-pre-wrap'
+                    : 'bg-muted text-foreground rounded-bl-sm',
                 )}
               >
                 {message.role === 'assistant' ? (
@@ -124,8 +130,8 @@ export function ChatPage() {
                 )}
               </div>
               {message.role === 'user' && (
-                <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-secondary">
-                  <User className="size-4 text-secondary-foreground" />
+                <div className="bg-secondary flex size-7 shrink-0 items-center justify-center rounded-full">
+                  <User className="text-secondary-foreground size-4" />
                 </div>
               )}
             </div>

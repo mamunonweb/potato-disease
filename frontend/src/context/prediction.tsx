@@ -18,7 +18,9 @@ interface PredictionContextValue {
 const PredictionContext = createContext<PredictionContextValue | null>(null)
 
 export function PredictionProvider({ children }: { children: ReactNode }) {
-  const [prediction, setPredictionState] = useState<PredictionResponse | null>(null)
+  const [prediction, setPredictionState] = useState<PredictionResponse | null>(
+    null,
+  )
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [file, setFile] = useState<File | null>(null)
 

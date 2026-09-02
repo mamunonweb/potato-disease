@@ -9,12 +9,7 @@ import {
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { usePrediction } from '@/context/prediction'
 
 export function InfoPage() {
@@ -26,16 +21,18 @@ export function InfoPage() {
   const sections = [
     { title: 'Symptoms', icon: Stethoscope, items: guidance.symptoms },
     { title: 'Possible causes', icon: Bug, items: guidance.causes },
-    { title: 'Recommended actions', icon: CheckCircle2, items: guidance.actions },
+    {
+      title: 'Recommended actions',
+      icon: CheckCircle2,
+      items: guidance.actions,
+    },
     { title: 'Prevention', icon: ShieldCheck, items: guidance.prevention },
   ]
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">
-          {prediction.display_name}
-        </h1>
+        <h1 className="text-2xl font-semibold">{prediction.display_name}</h1>
         <Badge variant="outline">
           {guidance.source === 'openrouter'
             ? 'AI-generated guidance'
@@ -46,7 +43,7 @@ export function InfoPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Info className="size-4 text-primary" /> Overview
+            <Info className="text-primary size-4" /> Overview
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -59,7 +56,7 @@ export function InfoPage() {
           <Card key={title}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
-                <Icon className="size-4 text-primary" /> {title}
+                <Icon className="text-primary size-4" /> {title}
               </CardTitle>
             </CardHeader>
             <CardContent>

@@ -1,4 +1,5 @@
 """PDF report endpoint: image upload → downloadable report."""
+
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from fastapi.responses import Response
 from PIL import Image
@@ -23,7 +24,5 @@ async def generate_pdf_report(
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
-        headers={
-            "Content-Disposition": 'attachment; filename="potato_disease_report.pdf"'
-        },
+        headers={"Content-Disposition": 'attachment; filename="potato_disease_report.pdf"'},
     )

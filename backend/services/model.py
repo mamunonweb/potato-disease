@@ -3,6 +3,7 @@
 TensorFlow is imported lazily so the API can boot and serve /health
 on machines without TF installed. The model is loaded once per worker.
 """
+
 import logging
 import os
 import threading
@@ -74,12 +75,8 @@ def verify_potato_leaf_input(image):
     A safety filter for obvious unrelated images, not a guaranteed
     potato-vs-non-potato classifier.
     """
-    rgb = np.asarray(
-        image.convert("RGB").resize(IMG_SIZE), dtype=np.float32
-    )
-    hsv = np.asarray(
-        Image.fromarray(np.uint8(rgb)).convert("HSV"), dtype=np.float32
-    )
+    rgb = np.asarray(image.convert("RGB").resize(IMG_SIZE), dtype=np.float32)
+    hsv = np.asarray(Image.fromarray(np.uint8(rgb)).convert("HSV"), dtype=np.float32)
     h = hsv[:, :, 0]
     s = hsv[:, :, 1] / 255.0
     v = hsv[:, :, 2] / 255.0
@@ -116,8 +113,6 @@ def predict_image(image):
     if model is None:
         raise ValueError(model_error or "The model is unavailable.")
 
-    import tensorflow as tf
-
     processed = preprocess_image(image)
     output = np.asarray(model.predict(processed, verbose=0))
 
@@ -142,9 +137,7 @@ def predict_image(image):
     confidence = float(probabilities[index])
 
     safe = np.clip(probabilities, 1e-8, 1.0)
-    entropy = float(
-        -np.sum(safe * np.log(safe)) / np.log(len(safe))
-    )
+    entropy = float(-np.sum(safe * np.log(safe)) / np.log(len(safe)))
 
     if confidence < UNCERTAIN_CONFIDENCE and entropy > UNCERTAIN_ENTROPY:
         raise ValueError(
