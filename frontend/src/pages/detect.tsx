@@ -60,7 +60,7 @@ export function DetectPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <section className="from-primary/10 via-accent/40 to-background grid items-center gap-6 overflow-hidden rounded-2xl border bg-gradient-to-br p-6 sm:p-8 lg:grid-cols-[1.2fr_1fr]">
+      <section className="from-primary/10 via-accent/40 to-background grid items-center gap-6 overflow-hidden rounded-2xl border bg-linear-to-br p-6 sm:p-8 lg:grid-cols-[1.2fr_1fr]">
         <div className="flex flex-col gap-3">
           <Badge className="w-fit" variant="secondary">
             Explainable CNN · Grad-CAM · AI chat

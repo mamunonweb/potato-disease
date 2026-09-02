@@ -112,7 +112,7 @@ export function CameraCapture({ onCapture }: CameraCaptureProps) {
               ref={videoRef}
               playsInline
               muted
-              className="aspect-[4/3] w-full object-cover"
+              className="aspect-4/3 w-full object-cover"
             />
           )}
         </div>
