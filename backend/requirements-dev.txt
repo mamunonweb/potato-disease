@@ -1,0 +1,2 @@
+# Formatter/linter for development only; not installed in the Docker image.
+ruff==0.16.5

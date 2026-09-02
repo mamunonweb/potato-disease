@@ -1,0 +1,3 @@
+# Heavy, rarely-changing dependency in its own layer so Docker caches it
+# separately from the fast-moving app dependencies (see Dockerfile).
+tensorflow==2.21.0

@@ -1,18 +1,40 @@
 services:
-  potato-disease-app:
+  potato-disease-frontend:
     build:
-      context: .
+      context: ./frontend
       dockerfile: Dockerfile
-    image: potato-disease-app:latest
-    container_name: potato-disease-app
+      args:
+        # Vite inlines VITE_* variables at build time; compose substitutes
+        # this from the project .env file (empty = same-origin API only).
+        VITE_SITE_URL: ${VITE_SITE_URL:-}
+    image: potato-disease-frontend:latest
+    container_name: potato-disease-frontend
     restart: unless-stopped
     ports:
-      - "8501:8501"
-    env_file:
-      - .env
+      - "8080:80"
+    depends_on:
+      - potato-disease-backend
     healthcheck:
-      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8501/_stcore/health')\""]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 60s
+      start_period: 10s
+
+  potato-disease-backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: potato-disease-backend:latest
+    container_name: potato-disease-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
