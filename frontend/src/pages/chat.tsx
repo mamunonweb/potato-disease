@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Navigate } from 'react-router'
 import { Bot, Send, User } from 'lucide-react'
 import { toast } from 'sonner'
+import { MarkdownContent } from '@/components/markdown-content'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -107,14 +108,20 @@ export function ChatPage() {
               )}
               <div
                 className={cn(
-                  'max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2 text-sm',
+                  'max-w-[85%] rounded-2xl px-4 py-2 text-sm',
                   message.role === 'user'
-                    ? 'rounded-br-sm bg-primary text-primary-foreground'
+                    ? 'whitespace-pre-wrap rounded-br-sm bg-primary text-primary-foreground'
                     : 'rounded-bl-sm bg-muted text-foreground',
                 )}
               >
-                {message.content ||
-                  (streaming && index === messages.length - 1 ? '…' : '')}
+                {message.role === 'assistant' ? (
+                  <MarkdownContent>
+                    {message.content ||
+                      (streaming && index === messages.length - 1 ? '…' : '')}
+                  </MarkdownContent>
+                ) : (
+                  message.content
+                )}
               </div>
               {message.role === 'user' && (
                 <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-secondary">
