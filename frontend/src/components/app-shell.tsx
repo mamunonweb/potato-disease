@@ -27,7 +27,7 @@ const NAV_ITEMS: NavItem[] = [
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="bg-background flex min-h-svh flex-col">
+    <div className="bg-background flex h-svh flex-col overflow-hidden">
       <header className="bg-background/90 sticky top-0 z-10 border-b backdrop-blur">
         <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-4 px-4">
           <NavLink to="/" className="flex items-center gap-2 font-semibold">
@@ -57,7 +57,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </nav>
         </div>
       </header>
-      <main className="mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col px-4 py-6">
+      <main className="mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col overflow-y-auto px-4 py-6">
         {children}
       </main>
       <footer className="border-t py-4">
