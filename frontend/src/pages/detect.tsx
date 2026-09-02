@@ -13,6 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { CameraCapture } from '@/components/camera-capture'
 import { usePrediction } from '@/context/prediction'
 import { ApiError, predictImage } from '@/lib/api'
 
@@ -142,6 +143,7 @@ export function DetectPage() {
             selectFile(event.target.files?.[0] ?? null)
           }
         />
+        <CameraCapture onCapture={selectFile} />
         <Button
           size="lg"
           disabled={!file || mutation.isPending}
