@@ -6,3 +6,4 @@ prediction_history.csv
 __pycache__/
 *.pyc
 .ruff_cache/
+artifacts/
