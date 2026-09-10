@@ -102,7 +102,7 @@ async def predict(image: UploadFile = File(...)) -> PredictionResponse:
     )
 
 
-HEALTHY_CLASS = "Potato___healthy"
+HEALTHY_CLASS = "Healthy"
 
 
 @router.post("/api/predict/batch")

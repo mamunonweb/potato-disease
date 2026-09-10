@@ -2,10 +2,9 @@
 
 ## Overview
 
-This project presents a deep learning solution for the automated detection of
-potato leaf diseases. A **custom explainable lightweight CNN** was developed
-and compared against transfer learning baselines (**ResNet50** and
-**MobileNetV2**) on the Potato Plant Diseases dataset (3 classes).
+This project presents a deep learning solution for the automated classification
+of potato leaf conditions. A **custom explainable lightweight CNN** is trained
+on a seven-class dataset and served through the FastAPI + React application.
 
 The application is a FastAPI + React client/server stack. The CNN predicts the
 leaf condition, **Grad-CAM** heatmaps show exactly where the model looked, and
@@ -14,11 +13,10 @@ causes, solutions, and chat guidance.
 
 ## Key features
 
-* **Multi-class classification:** detects Early Blight, Late Blight, and
-  healthy leaves.
+* **Multi-class classification:** classifies bacterial, fungal, healthy,
+  nematode, pest, Phytophthora, and viral categories.
 * **Lightweight architecture:** the proposed custom CNN has only **0.65M
   parameters** (vs. ~24M in ResNet50), making it suitable for edge deployment.
-* **High accuracy:** **98.71% test accuracy** with the custom CNN.
 * **Explainable AI:** Grad-CAM heatmaps highlight the infected leaf regions
   the model focused on, with an estimated attention severity.
 * **Single and batch analysis:** predict one image or up to 12 at once, with
@@ -29,21 +27,21 @@ causes, solutions, and chat guidance.
 * **AI guidance and chat:** OpenRouter-generated disease information with an
   automatic fallback to built-in guidance when the service is unavailable.
 
-## Model comparison
+## Model status
 
-| Model | Test Accuracy | Test Loss | Parameters | Remarks |
-| :--- | :--- | :--- | :--- | :--- |
-| **Custom CNN** | **98.71%** | **0.7809** | **~0.65 M** | **Best trade-off (lightweight & accurate)** |
-| ResNet50 | 98.67% | 0.7833 | ~24 M | High computational cost |
-| MobileNetV2 | 96.19% | 0.8603 | ~2.6 M | Standard lightweight baseline |
+The training notebook is configured for the current seven-class dataset. Test
+metrics will be recorded after the new Kaggle training run; metrics from the
+previous three-class experiment are intentionally not presented as current
+results.
 
 ## Dataset
 
-The dataset is the **Potato Plant Diseases Data**, originally collected by
-Hafiz Nouman, Pakistan.
+The repository contains a class-organized potato leaf dataset for the current
+seven-class training experiment.
 
-* **Total images:** 2,305
-* **Classes:** 3 (two diseases + healthy)
+* **Total images:** 3,076
+* **Classes:** 7 (`Bacteria`, `Fungi`, `Healthy`, `Nematode`, `Pest`,
+  `Phytopthora`, and `Virus`)
 * **Augmentation:** rotation, zoom, flip (on-the-fly)
 
 ## Architecture
@@ -59,7 +57,7 @@ TensorFlow/Keras inference stays in the Python backend because the existing
 ```
 backend/    FastAPI app (routes, services, schemas, config)
 frontend/   React SPA (Vite, TypeScript, shadcn/ui, TanStack Query)
-test/       sample leaf images used to exercise the API
+dataset/    class-organized images used by the training notebook
 ```
 
 API endpoints:
