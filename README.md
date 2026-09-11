@@ -29,20 +29,28 @@ causes, solutions, and chat guidance.
 
 ## Model status
 
-The training notebook is configured for the current seven-class dataset. Test
-metrics will be recorded after the new Kaggle training run; metrics from the
-previous three-class experiment are intentionally not presented as current
-results.
+The training notebook is configured for the current seven-class dataset. It
+selects the exported model by validation **macro-F1** rather than validation
+loss, caps the inverse-frequency class weights, and refuses to export a model
+that collapses to one class, cannot beat chance, or is systematically
+under-confident. Test metrics will be recorded after the new Kaggle training
+run; metrics from the previous three-class experiment are intentionally not
+presented as current results.
 
 ## Dataset
 
 The repository contains a class-organized potato leaf dataset for the current
 seven-class training experiment.
 
-* **Total images:** 3,076
+* **Total images:** 2,995
 * **Classes:** 7 (`Bacteria`, `Fungi`, `Healthy`, `Nematode`, `Pest`,
   `Phytopthora`, and `Virus`)
 * **Augmentation:** rotation, zoom, flip (on-the-fly)
+* **Deduplicated:** exact and near-duplicate images (perceptual hash) were
+  removed, and the training split groups remaining near-duplicates so they
+  cannot leak across train/validation/test.
+* **Known label conflicts:** six exact-duplicate pairs carry two different
+  labels (all involve `Pest`); they are retained for manual review.
 
 ## Architecture
 
