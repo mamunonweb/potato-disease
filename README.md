@@ -42,15 +42,16 @@ presented as current results.
 The repository contains a class-organized potato leaf dataset for the current
 seven-class training experiment.
 
-* **Total images:** 2,995
+* **Total images:** 2,983
 * **Classes:** 7 (`Bacteria`, `Fungi`, `Healthy`, `Nematode`, `Pest`,
   `Phytopthora`, and `Virus`)
 * **Augmentation:** rotation, zoom, flip (on-the-fly)
 * **Deduplicated:** exact and near-duplicate images (perceptual hash) were
   removed, and the training split groups remaining near-duplicates so they
   cannot leak across train/validation/test.
-* **Known label conflicts:** six exact-duplicate pairs carry two different
-  labels (all involve `Pest`); they are retained for manual review.
+* **Removed label conflicts:** six exact-duplicate pairs carried two different
+  labels (all involving `Pest`); both members of each pair were removed so no
+  contradictory labels remain.
 
 ## Architecture
 
