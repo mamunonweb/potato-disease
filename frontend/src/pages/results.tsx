@@ -14,8 +14,6 @@ const DISPLAY_NAMES: Record<string, string> = {
   Bacteria: 'Bacterial Disease',
   Fungi: 'Fungal Disease',
   Healthy: 'Healthy',
-  Nematode: 'Nematode Damage',
-  Pest: 'Pest Damage',
   Phytopthora: 'Phytophthora Disease',
   Virus: 'Viral Disease',
 }

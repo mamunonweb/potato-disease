@@ -4,9 +4,11 @@ Every function takes the model as an argument so nothing depends on
 module-level singletons. Grad-CAM is optional: failures degrade to a
 None heatmap instead of failing the prediction.
 
-Keras 3 models loaded from disk do not reliably expose `.output`, so
-the grad model is built by re-tracing the layer stack on a fresh input
-and capturing the requested convolutional layer's output along the way.
+Keras 3 models loaded from disk do not reliably expose `.output`, so flat
+models are re-traced from a fresh input. Transfer-learning models wrap a
+nested functional backbone whose residual connections cannot be re-traced
+layer by layer, so those tap the last conv through the backbone's own graph
+and apply the surrounding preprocessing/head layers around it.
 """
 
 import numpy as np
@@ -54,62 +56,89 @@ def _input_layer_cls():
     return tf.keras.layers.InputLayer
 
 
-def get_gradcam_model(model):
-    """Build a Grad-CAM model; handles flat and nested model layouts."""
+def _split_nested_backbone(model):
+    """Return (pre_layers, backbone, head_layers) if the model wraps a nested
+    functional backbone, otherwise None."""
     import tensorflow as tf
 
-    conv_layer, owner = find_gradcam_target(model)
-    if conv_layer is None:
-        raise ValueError("No convolutional layer was found in the loaded model.")
+    for index, layer in enumerate(model.layers):
+        if isinstance(layer, tf.keras.Model):
+            return model.layers[:index], layer, model.layers[index + 1 :]
+    return None
 
-    input_tensor = tf.keras.Input(shape=(*IMG_SIZE, 3))
 
-    if owner is model:
-        final_output, conv_output = _trace_layers(model.layers, input_tensor, conv_layer)
-    else:
-        owner_index = next(i for i, layer in enumerate(model.layers) if layer is owner)
-        owner_output, conv_output = _trace_layers(owner.layers, input_tensor, conv_layer)
-        final_output, _ = _trace_layers(model.layers[owner_index + 1 :], owner_output, conv_layer)
-
-    if conv_output is None:
-        raise ValueError("The selected convolutional layer is not on the traced path.")
-
-    grad_model = tf.keras.Model(inputs=input_tensor, outputs=[conv_output, final_output])
-    return grad_model, conv_layer.name
+def _apply_layers(layers, tensor):
+    for layer in layers:
+        if isinstance(layer, _input_layer_cls()):
+            continue
+        tensor = layer(tensor, training=False)
+    return tensor
 
 
 def make_gradcam(model, image, class_index):
-    """Return (heatmap, layer_name) for the requested class index."""
+    """Return (heatmap, layer_name) for the requested class index.
+
+    Transfer-learning backbones (e.g. MobileNetV2) are nested functional
+    models with residual connections, so they cannot be re-traced layer by
+    layer. Instead the backbone's own graph is used to tap the target conv,
+    and the surrounding preprocessing/head layers are applied around it.
+    """
     import tensorflow as tf
 
     from services.model import preprocess_image
 
-    grad_model, layer_name = get_gradcam_model(model)
-    input_tensor = preprocess_image(image)
+    image_batch = preprocess_image(image)
+    split = _split_nested_backbone(model)
 
-    with tf.GradientTape() as tape:
-        conv_output, predictions = grad_model(input_tensor, training=False)
-        score = predictions[:, class_index]
+    if split is None:
+        conv_layer, _ = find_gradcam_target(model)
+        if conv_layer is None:
+            raise ValueError("No convolutional layer was found in the loaded model.")
+        input_tensor = tf.keras.Input(shape=(*IMG_SIZE, 3))
+        final_output, conv_output = _trace_layers(model.layers, input_tensor, conv_layer)
+        if conv_output is None:
+            raise ValueError("The selected convolutional layer is not on the traced path.")
+        grad_model = tf.keras.Model(
+            inputs=input_tensor, outputs=[conv_output, final_output]
+        )
+        with tf.GradientTape() as tape:
+            conv_output_value, predictions = grad_model(image_batch, training=False)
+            score = predictions[:, class_index]
+    else:
+        pre_layers, backbone, head_layers = split
+        conv_layer, _ = find_gradcam_target(backbone)
+        if conv_layer is None:
+            raise ValueError("No convolutional layer was found in the backbone.")
+        backbone_grad = tf.keras.Model(
+            inputs=backbone.inputs, outputs=[conv_layer.output, backbone.output]
+        )
+        with tf.GradientTape() as tape:
+            backbone_input = _apply_layers(pre_layers, image_batch)
+            conv_output_value, predictions = backbone_grad(
+                backbone_input, training=False
+            )
+            predictions = _apply_layers(head_layers, predictions)
+            score = predictions[:, class_index]
 
-    gradients = tape.gradient(score, conv_output)
+    gradients = tape.gradient(score, conv_output_value)
     if gradients is None:
         raise ValueError("Gradients were not produced for the selected layer.")
 
-    if len(conv_output.shape) != 4:
+    if len(conv_output_value.shape) != 4:
         raise ValueError("Unsupported Grad-CAM feature map shape.")
 
     weights = tf.reduce_mean(gradients, axis=(1, 2))
-    conv_output = conv_output[0]
+    feature_map = conv_output_value[0]
     weights = weights[0]
 
-    heatmap = tf.reduce_sum(conv_output * weights, axis=-1)
+    heatmap = tf.reduce_sum(feature_map * weights, axis=-1)
     heatmap = tf.maximum(heatmap, 0)
     maximum = tf.reduce_max(heatmap)
 
     if float(maximum) > 0:
         heatmap = heatmap / maximum
 
-    return heatmap.numpy(), layer_name
+    return heatmap.numpy(), conv_layer.name
 
 
 def make_overlay(image, heatmap):

@@ -3,8 +3,9 @@
 ## Overview
 
 This project presents a deep learning solution for the automated classification
-of potato leaf conditions. A **custom explainable lightweight CNN** is trained
-on a seven-class dataset and served through the FastAPI + React application.
+of potato leaf conditions. A **lightweight explainable CNN** (MobileNetV2
+transfer learning) is trained on a five-class dataset and served through the
+FastAPI + React application.
 
 The application is a FastAPI + React client/server stack. The CNN predicts the
 leaf condition, **Grad-CAM** heatmaps show exactly where the model looked, and
@@ -14,9 +15,11 @@ causes, solutions, and chat guidance.
 ## Key features
 
 * **Multi-class classification:** classifies bacterial, fungal, healthy,
-  nematode, pest, Phytophthora, and viral categories.
-* **Lightweight architecture:** the proposed custom CNN has only **0.65M
-  parameters** (vs. ~24M in ResNet50), making it suitable for edge deployment.
+  Phytophthora, and viral categories.
+* **Lightweight architecture:** the deployed **MobileNetV2** classifier has
+  ~2.6M parameters (vs. ~24M in ResNet50), keeping it suitable for edge
+  deployment. A smaller 0.65M-parameter custom CNN remains selectable with
+  `ARCHITECTURE=custom_cnn` for comparison.
 * **Explainable AI:** Grad-CAM heatmaps highlight the infected leaf regions
   the model focused on, with an estimated attention severity.
 * **Single and batch analysis:** predict one image or up to 12 at once, with
@@ -29,29 +32,42 @@ causes, solutions, and chat guidance.
 
 ## Model status
 
-The training notebook is configured for the current seven-class dataset. It
-selects the exported model by validation **macro-F1** rather than validation
-loss, caps the inverse-frequency class weights, and refuses to export a model
-that collapses to one class, cannot beat chance, or is systematically
-under-confident. Test metrics will be recorded after the new Kaggle training
-run; metrics from the previous three-class experiment are intentionally not
-presented as current results.
+The training notebook is configured for the current five-class dataset. Models
+are selected by validation **macro-F1** rather than validation loss, the
+inverse-frequency class weights are capped, and a model that collapses to one
+class, cannot beat chance, or is systematically under-confident is refused for
+export. The default architecture is **MobileNetV2** transfer learning (frozen
+base, then fine-tuned top layers); `ARCHITECTURE=custom_cnn` trains the original
+lightweight CNN instead.
+
+The current MobileNetV2 model scores **macro-F1 0.912** and **91.3% accuracy**
+on the held-out test split (231 images):
+
+| Class | Precision | Recall | F1 | Support |
+| :--- | --: | --: | --: | --: |
+| Bacterial Disease | 0.96 | 0.93 | 0.94 | 54 |
+| Fungal Disease | 0.93 | 0.91 | 0.92 | 74 |
+| Healthy | 0.90 | 1.00 | 0.95 | 19 |
+| Phytophthora | 0.89 | 0.81 | 0.85 | 31 |
+| Viral Disease | 0.86 | 0.94 | 0.90 | 53 |
+
+Test metrics are from a duplicate-group-aware split, so near-identical images
+cannot leak between train and test.
 
 ## Dataset
 
 The repository contains a class-organized potato leaf dataset for the current
-seven-class training experiment.
+five-class training experiment.
 
-* **Total images:** 2,983
-* **Classes:** 7 (`Bacteria`, `Fungi`, `Healthy`, `Nematode`, `Pest`,
-  `Phytopthora`, and `Virus`)
+* **Total images:** 2,321
+* **Classes:** 5 (`Bacteria`, `Fungi`, `Healthy`, `Phytopthora`, and `Virus`)
 * **Augmentation:** rotation, zoom, flip (on-the-fly)
 * **Deduplicated:** exact and near-duplicate images (perceptual hash) were
   removed, and the training split groups remaining near-duplicates so they
   cannot leak across train/validation/test.
 * **Removed label conflicts:** six exact-duplicate pairs carried two different
-  labels (all involving `Pest`); both members of each pair were removed so no
-  contradictory labels remain.
+  labels, all involving the dropped `Pest` category; both members of each pair
+  were removed so no contradictory labels remain.
 
 ## Architecture
 

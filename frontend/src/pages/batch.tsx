@@ -32,8 +32,6 @@ const PREDICTION_STYLES: Record<string, string> = {
     'bg-violet-100 text-violet-800 dark:bg-violet-950 dark:text-violet-300',
   Healthy:
     'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300',
-  Nematode: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-950 dark:text-cyan-300',
-  Pest: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-950 dark:text-yellow-300',
   Phytopthora: 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300',
   Virus: 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300',
 }

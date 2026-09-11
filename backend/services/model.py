@@ -21,8 +21,6 @@ CLASS_NAMES = [
     "Bacteria",
     "Fungi",
     "Healthy",
-    "Nematode",
-    "Pest",
     "Phytopthora",
     "Virus",
 ]
@@ -31,8 +29,6 @@ DISPLAY_NAMES = {
     "Bacteria": "Bacterial Disease",
     "Fungi": "Fungal Disease",
     "Healthy": "Healthy",
-    "Nematode": "Nematode Damage",
-    "Pest": "Pest Damage",
     "Phytopthora": "Phytophthora Disease",
     "Virus": "Viral Disease",
 }
@@ -81,7 +77,7 @@ def preprocess_image(image):
 
 
 def verify_potato_leaf_input(image):
-    """Conservative input gate for the seven-class potato-leaf model.
+    """Conservative input gate for the five-class potato-leaf model.
 
     A safety filter for obvious unrelated images, not a guaranteed
     potato-vs-non-potato classifier.
