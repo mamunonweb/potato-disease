@@ -76,7 +76,7 @@ export function DetectPage() {
           </p>
         </div>
         <img
-          src="/og-image.png"
+          src="/og-image.jpg"
           alt="Potato leaf with Grad-CAM attention overlay"
           className="hidden w-full rounded-xl border shadow-lg lg:block"
           loading="eager"

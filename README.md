@@ -69,6 +69,29 @@ five-class training experiment.
   labels, all involving the dropped `Pest` category; both members of each pair
   were removed so no contradictory labels remain.
 
+## Training the model
+
+The model is trained with `explainable-potato-plant-disease-detection.ipynb`
+(Kaggle or a local GPU environment). Point `DATASET_DIR` at the class-organized
+dataset and run the notebook end to end. Optional environment variables:
+
+| Variable | Default | Purpose |
+| :--- | :--- | :--- |
+| `ARCHITECTURE` | `mobilenetv2` | `mobilenetv2` or `custom_cnn` |
+| `EPOCHS` | `40` | Total epochs across both phases |
+| `HEAD_LEARNING_RATE` | `1e-3` | Learning rate while the backbone is frozen |
+| `FINE_TUNE_LEARNING_RATE` | `1e-4` | Learning rate after unfreezing |
+| `FINE_TUNE_AT_EPOCH` | `8` | Epoch at which the backbone is unfrozen |
+| `FINE_TUNE_LAYERS` | `30` | Top backbone layers to fine-tune |
+| `CLASS_WEIGHT_CAP` | `3.0` | Cap on inverse-frequency class weights |
+| `DUPLICATE_HASH_THRESHOLD` | `10` | Perceptual-hash distance for duplicate grouping |
+| `SANITY_MIN_MEAN_CONFIDENCE` | `0.45` | Minimum mean confidence allowed for export |
+
+The notebook writes `explainable_cnn_model.keras` together with `evaluation.json`,
+`model_metadata.json`, `training_curves.png`, and `confusion_matrix.png`. To serve
+a newly trained model, copy that `explainable_cnn_model.keras` to the repository
+root (the path referenced by `MODEL_PATH`) and rebuild the backend.
+
 ## Architecture
 
 | Service | Purpose | Port |
@@ -198,15 +221,18 @@ carry the same disclaimer.
 
 ## Explainable AI (Grad-CAM)
 
-Grad-CAM was used to validate the model. The heatmaps below show that the
-model correctly focuses on the **lesions and spots** on the leaves rather than
-the background.
+Grad-CAM runs at inference on the served model. It taps the last convolutional
+feature map and highlights the leaf regions that drove the prediction; for the
+nested MobileNetV2 backbone the heatmap is computed through the backbone's own
+graph, and an estimated attention severity accompanies each prediction and PDF
+report. The model correctly focuses on **lesions and spots** rather than the
+background.
 
 <img
-  width="1452"
-  height="1489"
+  width="1200"
+  height="1231"
   alt="Grad-CAM heatmap on a diseased potato leaf"
-  src="https://github.com/jahangirhossain5/A-Lightweight-Explainable-CNN-Model-for-Potato-Plant-Disease-Detection/blob/a263fcbb8dc8b6d593ff9122b454121c99157e1a/Pred-Image.png"
+  src="./frontend/public/og-image.jpg"
 />
 
 ## Contributors
