@@ -9,8 +9,8 @@ FastAPI + React application.
 
 The application is a FastAPI + React client/server stack. The CNN predicts the
 leaf condition, **Grad-CAM** heatmaps show exactly where the model looked, and
-an AI assistant powered by OpenRouter provides practical disease information,
-causes, solutions, and chat guidance.
+an AI assistant (OpenRouter or opencode Zen) provides practical disease
+information, causes, solutions, and chat guidance.
 
 ## Key features
 
@@ -27,8 +27,9 @@ causes, solutions, and chat guidance.
 * **Camera capture:** take the leaf photo directly in the browser.
 * **PDF report:** downloadable report with prediction, Grad-CAM overlay,
   top-3 probabilities, and disease guidance.
-* **AI guidance and chat:** OpenRouter-generated disease information with an
-  automatic fallback to built-in guidance when the service is unavailable.
+* **AI guidance and chat:** provider-generated disease information (OpenRouter
+  or opencode Zen) with an automatic fallback to built-in guidance when the
+  service is unavailable.
 
 ## Model status
 
@@ -97,7 +98,7 @@ root (the path referenced by `MODEL_PATH`) and rebuild the backend.
 | Service | Purpose | Port |
 | :--- | :--- | :--- |
 | `potato-disease-frontend` | React SPA (Vite, TypeScript, shadcn/ui, TanStack Query) served by nginx | 80 (host 8080) |
-| `potato-disease-backend` | FastAPI: prediction, Grad-CAM, PDF reports, OpenRouter chat | 8000 |
+| `potato-disease-backend` | FastAPI: prediction, Grad-CAM, PDF reports, provider-backed chat | 8000 |
 
 TensorFlow/Keras inference stays in the Python backend because the existing
 `.keras` model and the Grad-CAM pipeline depend on the Python ML ecosystem.
@@ -198,19 +199,34 @@ docker compose -f compose.yaml -f compose.prod.yaml down
 Do not commit `compose.prod.yaml` or `.env`; they are ignored because they
 contain server-specific hostnames, keys, and deployment configuration.
 
-## OpenRouter-generated guidance
+## AI-generated guidance
 
-The Disease Information, Causes & Solutions pages, and the chat assistant can
-use OpenRouter to generate current guidance from the predicted disease class.
-The CNN remains responsible for the prediction, while the built-in disease
-information is used automatically if OpenRouter is unavailable, rate-limited,
-or not configured.
+The guidance pages and the chat assistant can generate current information from
+the predicted disease class. The CNN remains responsible for the prediction,
+while the built-in disease information is used automatically if the provider is
+unavailable, rate-limited, or not configured.
 
-Set the API key in `.env` without committing it to the repository:
+Two providers are supported and selected with `CHAT_PROVIDER`:
+
+* `openrouter` (default) — set `OPENROUTER_API_KEY` and `OPENROUTER_MODEL`.
+* `opencode` — set `OPENCODE_API_KEY` and `OPENCODE_MODEL`. Defaults to the
+  opencode **Go** gateway (`https://opencode.ai/zen/go/v1`) with
+  `deepseek-v4.1-flash`. To use the Zen pay-as-you-go gateway instead, set
+  `OPENCODE_BASE_URL=https://opencode.ai/zen/v1`; note that Zen's free models
+  are client-only and API use requires account credits. When the provider is
+  unavailable the app falls back to built-in guidance.
+
+Set the provider and key in `.env` without committing it to the repository:
 
 ```bash
-OPENROUTER_API_KEY=sk-or-v1-...
-OPENROUTER_MODEL=openrouter/free
+CHAT_PROVIDER=opencode
+OPENCODE_API_KEY=...
+OPENCODE_MODEL=deepseek-v4.1-flash
+
+# or, for OpenRouter
+# CHAT_PROVIDER=openrouter
+# OPENROUTER_API_KEY=sk-or-v1-...
+# OPENROUTER_MODEL=openrouter/free
 ```
 
 The generated guidance is cached for 24 hours (`GUIDANCE_TTL_SECONDS`) and is

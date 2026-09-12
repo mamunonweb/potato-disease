@@ -4,4 +4,3 @@ python-multipart==0.0.20
 reportlab==4.5.1
 pillow==12.3.0
 numpy==2.4.6
-openrouter==1.1.103

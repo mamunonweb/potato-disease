@@ -34,9 +34,9 @@ export function InfoPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold">{prediction.display_name}</h1>
         <Badge variant="outline">
-          {guidance.source === 'openrouter'
-            ? 'AI-generated guidance'
-            : 'Built-in guidance'}
+          {guidance.source === 'builtin'
+            ? 'Built-in guidance'
+            : 'AI-generated guidance'}
         </Badge>
       </div>
 

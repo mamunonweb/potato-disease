@@ -1,17 +1,15 @@
-"""Disease knowledge and OpenRouter-generated guidance.
+"""Disease knowledge and provider-generated guidance.
 
-Ported from the Streamlit app. The built-in DISEASE_INFO is the
-fallback used automatically when OpenRouter is unavailable,
-rate-limited, or not configured.
+The built-in DISEASE_INFO is the fallback used automatically when the
+configured provider is unavailable, rate-limited, or not configured.
 """
 
 import json
 import threading
 import time
-from urllib.error import HTTPError, URLError
-from urllib.request import Request, urlopen
 
 import config
+from services import llm
 
 DISEASE_INFO = {
     "Bacteria": {
@@ -188,8 +186,7 @@ def _valid_guidance(content):
 def generate_disease_guidance(predicted_class):
     """Generate cached guidance, returning None when the provider is
     unavailable. Cached for GUIDANCE_TTL_SECONDS (default 24h)."""
-    api_key = config.OPENROUTER_API_KEY
-    if not api_key:
+    if not llm.is_configured():
         return None
 
     now = time.time()
@@ -199,44 +196,38 @@ def generate_disease_guidance(predicted_class):
             return cached[1]
 
     try:
-        from openrouter import OpenRouter
-
         base_info = DISEASE_INFO[predicted_class]
-        with OpenRouter(api_key=api_key) as client:
-            response = client.chat.send(
-                model=config.OPENROUTER_MODEL,
-                stream=False,
-                temperature=0.2,
-                max_tokens=700,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": (
-                            "You are a cautious agricultural information assistant. "
-                            "Return valid JSON only with exactly these fields: "
-                            "description (string), symptoms (array of strings), "
-                            "causes (array of strings), actions (array of strings), "
-                            "prevention (array of strings). Provide general guidance "
-                            "for potato plants. Do not claim certainty, invent facts, "
-                            "or provide pesticide names, dosage, or application rates. "
-                            "Recommend local agricultural guidance for treatment decisions."
-                        ),
-                    },
-                    {
-                        "role": "user",
-                        "content": (
-                            f"Generate concise guidance for {base_info['name']}. "
-                            "Use this existing reference as context, but improve its "
-                            f"clarity without contradicting it:\n{json.dumps(base_info)}"
-                        ),
-                    },
-                ],
-            )
-        content = response.choices[0].message.content
-        if not isinstance(content, str):
+        content = llm.chat_completion(
+            [
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a cautious agricultural information assistant. "
+                        "Return valid JSON only with exactly these fields: "
+                        "description (string), symptoms (array of strings), "
+                        "causes (array of strings), actions (array of strings), "
+                        "prevention (array of strings). Provide general guidance "
+                        "for potato plants. Do not claim certainty, invent facts, "
+                        "or provide pesticide names, dosage, or application rates. "
+                        "Recommend local agricultural guidance for treatment decisions."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": (
+                        f"Generate concise guidance for {base_info['name']}. "
+                        "Use this existing reference as context, but improve its "
+                        f"clarity without contradicting it:\n{json.dumps(base_info)}"
+                    ),
+                },
+            ],
+            temperature=0.2,
+            max_tokens=1500,
+            session=f"guidance:{predicted_class}",
+        )
+        if not content:
             return None
 
-        content = content.strip()
         if content.startswith("```"):
             content = content.split("\n", 1)[1].rsplit("```", 1)[0].strip()
         guidance = _valid_guidance(json.loads(content))
@@ -251,43 +242,12 @@ def generate_disease_guidance(predicted_class):
 
 
 def get_disease_info(predicted_class):
-    """Return display content and whether it came from OpenRouter."""
+    """Return display content and the source of the guidance."""
     fallback = DISEASE_INFO[predicted_class]
     generated = generate_disease_guidance(predicted_class)
     if not generated:
-        return fallback, False
+        return fallback, "builtin"
 
     info = dict(fallback)
     info.update(generated)
-    return info, True
-
-
-def check_openrouter_api_key():
-    """Check the configured key without ever returning or displaying it."""
-    api_key = config.OPENROUTER_API_KEY
-    if not api_key:
-        return False, "OPENROUTER_API_KEY is not configured."
-
-    request = Request(
-        "https://openrouter.ai/api/v1/key",
-        headers={"Authorization": f"Bearer {api_key}"},
-        method="GET",
-    )
-
-    try:
-        with urlopen(request, timeout=10) as response:
-            payload = json.loads(response.read().decode("utf-8"))
-            key_data = payload.get("data", {})
-            if key_data.get("disabled") is True:
-                return False, "OpenRouter accepted the request, but this key is disabled."
-            return True, "OpenRouter API key is valid and active."
-    except HTTPError as exc:
-        if exc.code == 401:
-            return False, "OpenRouter rejected the API key (401 Unauthorized)."
-        if exc.code == 429:
-            return False, "OpenRouter rate-limited the key check (429 Too Many Requests)."
-        return False, f"OpenRouter key check failed with HTTP {exc.code}."
-    except URLError:
-        return False, "Could not reach OpenRouter. Check the server network connection."
-    except Exception:
-        return False, "OpenRouter returned an unexpected response during the key check."
+    return info, llm.resolve_provider()
