@@ -23,7 +23,7 @@ class GradcamInfo(BaseModel):
 
 
 class GuidanceInfo(BaseModel):
-    source: Literal["openrouter", "builtin"]
+    source: Literal["openrouter", "opencode", "builtin"]
     description: str
     symptoms: list[str]
     causes: list[str]
@@ -95,5 +95,5 @@ class ChatStreamEvent(BaseModel):
 
 class ChatResponse(BaseModel):
     reply: str
-    guidance_source: Literal["openrouter", "builtin"]
+    guidance_source: Literal["openrouter", "opencode", "builtin"]
     disclaimer: str

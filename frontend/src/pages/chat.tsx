@@ -88,7 +88,7 @@ export function ChatPage() {
         <h1 className="text-xl font-semibold">Disease assistant</h1>
         <Badge
           variant={
-            prediction.predicted_class === 'Potato___healthy'
+            prediction.predicted_class === 'Healthy'
               ? 'secondary'
               : 'destructive'
           }

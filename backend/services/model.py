@@ -18,15 +18,19 @@ logger = logging.getLogger(__name__)
 IMG_SIZE = (224, 224)
 
 CLASS_NAMES = [
-    "Potato___Early_blight",
-    "Potato___Late_blight",
-    "Potato___healthy",
+    "Bacteria",
+    "Fungi",
+    "Healthy",
+    "Phytopthora",
+    "Virus",
 ]
 
 DISPLAY_NAMES = {
-    "Potato___Early_blight": "Early Blight",
-    "Potato___Late_blight": "Late Blight",
-    "Potato___healthy": "Healthy",
+    "Bacteria": "Bacterial Disease",
+    "Fungi": "Fungal Disease",
+    "Healthy": "Healthy",
+    "Phytopthora": "Phytophthora Disease",
+    "Virus": "Viral Disease",
 }
 
 LOW_CONFIDENCE_THRESHOLD = 0.60
@@ -56,6 +60,9 @@ def get_model():
             import tensorflow as tf
 
             _model = tf.keras.models.load_model(config.MODEL_PATH, compile=False)
+            output_shape = getattr(_model, "output_shape", None)
+            if not output_shape or output_shape[-1] != len(CLASS_NAMES):
+                raise ValueError("The model output does not match the configured classes.")
         except Exception:
             # Log the real cause server-side; clients only get a safe message.
             logger.exception("Failed to load the model from the configured path.")
@@ -70,7 +77,7 @@ def preprocess_image(image):
 
 
 def verify_potato_leaf_input(image):
-    """Conservative input gate for the 3-class potato-leaf model.
+    """Conservative input gate for the five-class potato-leaf model.
 
     A safety filter for obvious unrelated images, not a guaranteed
     potato-vs-non-potato classifier.

@@ -77,7 +77,7 @@ async def predict(image: UploadFile = File(...)) -> PredictionResponse:
             "unavailable for this model architecture."
         )
 
-    info, generated = guidance.get_disease_info(predicted_class)
+    info, source = guidance.get_disease_info(predicted_class)
 
     return PredictionResponse(
         predicted_class=predicted_class,
@@ -95,14 +95,14 @@ async def predict(image: UploadFile = File(...)) -> PredictionResponse:
         gradcam=gradcam_payload,
         gradcam_note=gradcam_note,
         guidance=GuidanceInfo(
-            source="openrouter" if generated else "builtin",
+            source=source,
             **info,
         ),
         disclaimer=DISCLAIMER,
     )
 
 
-HEALTHY_CLASS = "Potato___healthy"
+HEALTHY_CLASS = "Healthy"
 
 
 @router.post("/api/predict/batch")

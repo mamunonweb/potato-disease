@@ -2,23 +2,24 @@
 
 ## Overview
 
-This project presents a deep learning solution for the automated detection of
-potato leaf diseases. A **custom explainable lightweight CNN** was developed
-and compared against transfer learning baselines (**ResNet50** and
-**MobileNetV2**) on the Potato Plant Diseases dataset (3 classes).
+This project presents a deep learning solution for the automated classification
+of potato leaf conditions. A **lightweight explainable CNN** (MobileNetV2
+transfer learning) is trained on a five-class dataset and served through the
+FastAPI + React application.
 
 The application is a FastAPI + React client/server stack. The CNN predicts the
 leaf condition, **Grad-CAM** heatmaps show exactly where the model looked, and
-an AI assistant powered by OpenRouter provides practical disease information,
-causes, solutions, and chat guidance.
+an AI assistant (OpenRouter or opencode Zen) provides practical disease
+information, causes, solutions, and chat guidance.
 
 ## Key features
 
-* **Multi-class classification:** detects Early Blight, Late Blight, and
-  healthy leaves.
-* **Lightweight architecture:** the proposed custom CNN has only **0.65M
-  parameters** (vs. ~24M in ResNet50), making it suitable for edge deployment.
-* **High accuracy:** **98.71% test accuracy** with the custom CNN.
+* **Multi-class classification:** classifies bacterial, fungal, healthy,
+  Phytophthora, and viral categories.
+* **Lightweight architecture:** the deployed **MobileNetV2** classifier has
+  ~2.6M parameters (vs. ~24M in ResNet50), keeping it suitable for edge
+  deployment. A smaller 0.65M-parameter custom CNN remains selectable with
+  `ARCHITECTURE=custom_cnn` for comparison.
 * **Explainable AI:** Grad-CAM heatmaps highlight the infected leaf regions
   the model focused on, with an estimated attention severity.
 * **Single and batch analysis:** predict one image or up to 12 at once, with
@@ -26,32 +27,78 @@ causes, solutions, and chat guidance.
 * **Camera capture:** take the leaf photo directly in the browser.
 * **PDF report:** downloadable report with prediction, Grad-CAM overlay,
   top-3 probabilities, and disease guidance.
-* **AI guidance and chat:** OpenRouter-generated disease information with an
-  automatic fallback to built-in guidance when the service is unavailable.
+* **AI guidance and chat:** provider-generated disease information (OpenRouter
+  or opencode Zen) with an automatic fallback to built-in guidance when the
+  service is unavailable.
 
-## Model comparison
+## Model status
 
-| Model | Test Accuracy | Test Loss | Parameters | Remarks |
-| :--- | :--- | :--- | :--- | :--- |
-| **Custom CNN** | **98.71%** | **0.7809** | **~0.65 M** | **Best trade-off (lightweight & accurate)** |
-| ResNet50 | 98.67% | 0.7833 | ~24 M | High computational cost |
-| MobileNetV2 | 96.19% | 0.8603 | ~2.6 M | Standard lightweight baseline |
+The training notebook is configured for the current five-class dataset. Models
+are selected by validation **macro-F1** rather than validation loss, the
+inverse-frequency class weights are capped, and a model that collapses to one
+class, cannot beat chance, or is systematically under-confident is refused for
+export. The default architecture is **MobileNetV2** transfer learning (frozen
+base, then fine-tuned top layers); `ARCHITECTURE=custom_cnn` trains the original
+lightweight CNN instead.
+
+The current MobileNetV2 model scores **macro-F1 0.912** and **91.3% accuracy**
+on the held-out test split (231 images):
+
+| Class | Precision | Recall | F1 | Support |
+| :--- | --: | --: | --: | --: |
+| Bacterial Disease | 0.96 | 0.93 | 0.94 | 54 |
+| Fungal Disease | 0.93 | 0.91 | 0.92 | 74 |
+| Healthy | 0.90 | 1.00 | 0.95 | 19 |
+| Phytophthora | 0.89 | 0.81 | 0.85 | 31 |
+| Viral Disease | 0.86 | 0.94 | 0.90 | 53 |
+
+Test metrics are from a duplicate-group-aware split, so near-identical images
+cannot leak between train and test.
 
 ## Dataset
 
-The dataset is the **Potato Plant Diseases Data**, originally collected by
-Hafiz Nouman, Pakistan.
+The repository contains a class-organized potato leaf dataset for the current
+five-class training experiment.
 
-* **Total images:** 2,305
-* **Classes:** 3 (two diseases + healthy)
+* **Total images:** 2,321
+* **Classes:** 5 (`Bacteria`, `Fungi`, `Healthy`, `Phytopthora`, and `Virus`)
 * **Augmentation:** rotation, zoom, flip (on-the-fly)
+* **Deduplicated:** exact and near-duplicate images (perceptual hash) were
+  removed, and the training split groups remaining near-duplicates so they
+  cannot leak across train/validation/test.
+* **Removed label conflicts:** six exact-duplicate pairs carried two different
+  labels, all involving the dropped `Pest` category; both members of each pair
+  were removed so no contradictory labels remain.
+
+## Training the model
+
+The model is trained with `explainable-potato-plant-disease-detection.ipynb`
+(Kaggle or a local GPU environment). Point `DATASET_DIR` at the class-organized
+dataset and run the notebook end to end. Optional environment variables:
+
+| Variable | Default | Purpose |
+| :--- | :--- | :--- |
+| `ARCHITECTURE` | `mobilenetv2` | `mobilenetv2` or `custom_cnn` |
+| `EPOCHS` | `40` | Total epochs across both phases |
+| `HEAD_LEARNING_RATE` | `1e-3` | Learning rate while the backbone is frozen |
+| `FINE_TUNE_LEARNING_RATE` | `1e-4` | Learning rate after unfreezing |
+| `FINE_TUNE_AT_EPOCH` | `8` | Epoch at which the backbone is unfrozen |
+| `FINE_TUNE_LAYERS` | `30` | Top backbone layers to fine-tune |
+| `CLASS_WEIGHT_CAP` | `3.0` | Cap on inverse-frequency class weights |
+| `DUPLICATE_HASH_THRESHOLD` | `10` | Perceptual-hash distance for duplicate grouping |
+| `SANITY_MIN_MEAN_CONFIDENCE` | `0.45` | Minimum mean confidence allowed for export |
+
+The notebook writes `explainable_cnn_model.keras` together with `evaluation.json`,
+`model_metadata.json`, `training_curves.png`, and `confusion_matrix.png`. To serve
+a newly trained model, copy that `explainable_cnn_model.keras` to the repository
+root (the path referenced by `MODEL_PATH`) and rebuild the backend.
 
 ## Architecture
 
 | Service | Purpose | Port |
 | :--- | :--- | :--- |
 | `potato-disease-frontend` | React SPA (Vite, TypeScript, shadcn/ui, TanStack Query) served by nginx | 80 (host 8080) |
-| `potato-disease-backend` | FastAPI: prediction, Grad-CAM, PDF reports, OpenRouter chat | 8000 |
+| `potato-disease-backend` | FastAPI: prediction, Grad-CAM, PDF reports, provider-backed chat | 8000 |
 
 TensorFlow/Keras inference stays in the Python backend because the existing
 `.keras` model and the Grad-CAM pipeline depend on the Python ML ecosystem.
@@ -59,7 +106,7 @@ TensorFlow/Keras inference stays in the Python backend because the existing
 ```
 backend/    FastAPI app (routes, services, schemas, config)
 frontend/   React SPA (Vite, TypeScript, shadcn/ui, TanStack Query)
-test/       sample leaf images used to exercise the API
+dataset/    class-organized images used by the training notebook
 ```
 
 API endpoints:
@@ -152,19 +199,34 @@ docker compose -f compose.yaml -f compose.prod.yaml down
 Do not commit `compose.prod.yaml` or `.env`; they are ignored because they
 contain server-specific hostnames, keys, and deployment configuration.
 
-## OpenRouter-generated guidance
+## AI-generated guidance
 
-The Disease Information, Causes & Solutions pages, and the chat assistant can
-use OpenRouter to generate current guidance from the predicted disease class.
-The CNN remains responsible for the prediction, while the built-in disease
-information is used automatically if OpenRouter is unavailable, rate-limited,
-or not configured.
+The guidance pages and the chat assistant can generate current information from
+the predicted disease class. The CNN remains responsible for the prediction,
+while the built-in disease information is used automatically if the provider is
+unavailable, rate-limited, or not configured.
 
-Set the API key in `.env` without committing it to the repository:
+Two providers are supported and selected with `CHAT_PROVIDER`:
+
+* `openrouter` (default) — set `OPENROUTER_API_KEY` and `OPENROUTER_MODEL`.
+* `opencode` — set `OPENCODE_API_KEY` and `OPENCODE_MODEL`. Defaults to the
+  opencode **Go** gateway (`https://opencode.ai/zen/go/v1`) with
+  `deepseek-v4.1-flash`. To use the Zen pay-as-you-go gateway instead, set
+  `OPENCODE_BASE_URL=https://opencode.ai/zen/v1`; note that Zen's free models
+  are client-only and API use requires account credits. When the provider is
+  unavailable the app falls back to built-in guidance.
+
+Set the provider and key in `.env` without committing it to the repository:
 
 ```bash
-OPENROUTER_API_KEY=sk-or-v1-...
-OPENROUTER_MODEL=openrouter/free
+CHAT_PROVIDER=opencode
+OPENCODE_API_KEY=...
+OPENCODE_MODEL=deepseek-v4.1-flash
+
+# or, for OpenRouter
+# CHAT_PROVIDER=openrouter
+# OPENROUTER_API_KEY=sk-or-v1-...
+# OPENROUTER_MODEL=openrouter/free
 ```
 
 The generated guidance is cached for 24 hours (`GUIDANCE_TTL_SECONDS`) and is
@@ -175,15 +237,18 @@ carry the same disclaimer.
 
 ## Explainable AI (Grad-CAM)
 
-Grad-CAM was used to validate the model. The heatmaps below show that the
-model correctly focuses on the **lesions and spots** on the leaves rather than
-the background.
+Grad-CAM runs at inference on the served model. It taps the last convolutional
+feature map and highlights the leaf regions that drove the prediction; for the
+nested MobileNetV2 backbone the heatmap is computed through the backbone's own
+graph, and an estimated attention severity accompanies each prediction and PDF
+report. The model correctly focuses on **lesions and spots** rather than the
+background.
 
 <img
-  width="1452"
-  height="1489"
+  width="1200"
+  height="1231"
   alt="Grad-CAM heatmap on a diseased potato leaf"
-  src="https://github.com/jahangirhossain5/A-Lightweight-Explainable-CNN-Model-for-Potato-Plant-Disease-Detection/blob/a263fcbb8dc8b6d593ff9122b454121c99157e1a/Pred-Image.png"
+  src="./frontend/public/og-image.jpg"
 />
 
 ## Contributors

@@ -11,9 +11,11 @@ import { usePrediction } from '@/context/prediction'
 import { reportPdf } from '@/lib/api'
 
 const DISPLAY_NAMES: Record<string, string> = {
-  Potato___Early_blight: 'Early Blight',
-  Potato___Late_blight: 'Late Blight',
-  Potato___healthy: 'Healthy',
+  Bacteria: 'Bacterial Disease',
+  Fungi: 'Fungal Disease',
+  Healthy: 'Healthy',
+  Phytopthora: 'Phytophthora Disease',
+  Virus: 'Viral Disease',
 }
 
 const SEVERITY_STYLES: Record<string, string> = {
@@ -44,7 +46,7 @@ export function ResultsPage() {
 
   if (!prediction || !imageUrl) return <Navigate to="/" replace />
 
-  const isHealthy = prediction.predicted_class === 'Potato___healthy'
+  const isHealthy = prediction.predicted_class === 'Healthy'
 
   return (
     <div className="flex flex-col gap-6">

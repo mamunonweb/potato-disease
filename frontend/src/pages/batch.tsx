@@ -27,12 +27,13 @@ const MAX_BATCH_FILES = 12
 const MAX_FILE_MB = 10
 
 const PREDICTION_STYLES: Record<string, string> = {
-  Potato___Early_blight:
-    'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300',
-  Potato___Late_blight:
-    'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300',
-  Potato___healthy:
+  Bacteria: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300',
+  Fungi:
+    'bg-violet-100 text-violet-800 dark:bg-violet-950 dark:text-violet-300',
+  Healthy:
     'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300',
+  Phytopthora: 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300',
+  Virus: 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300',
 }
 
 function csvEscape(value: string): string {
@@ -208,10 +209,10 @@ export function BatchPage() {
           <CardHeader>
             <CardTitle className="text-base">Results</CardTitle>
             <div className="flex flex-wrap gap-2">
-              <Badge className={PREDICTION_STYLES['Potato___healthy']}>
+              <Badge className={PREDICTION_STYLES.Healthy}>
                 Healthy: {response.healthy_count}
               </Badge>
-              <Badge className={PREDICTION_STYLES['Potato___Early_blight']}>
+              <Badge className={PREDICTION_STYLES.Bacteria}>
                 Disease: {response.disease_count}
               </Badge>
               {response.failed_count > 0 && (

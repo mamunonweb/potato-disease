@@ -1,79 +1,76 @@
-"""Disease knowledge and OpenRouter-generated guidance.
+"""Disease knowledge and provider-generated guidance.
 
-Ported from the Streamlit app. The built-in DISEASE_INFO is the
-fallback used automatically when OpenRouter is unavailable,
-rate-limited, or not configured.
+The built-in DISEASE_INFO is the fallback used automatically when the
+configured provider is unavailable, rate-limited, or not configured.
 """
 
 import json
 import threading
 import time
-from urllib.error import HTTPError, URLError
-from urllib.request import Request, urlopen
 
 import config
+from services import llm
 
 DISEASE_INFO = {
-    "Potato___Early_blight": {
-        "name": "Early Blight",
-        "description": "A common potato leaf disease that can reduce plant growth and yield.",
+    "Bacteria": {
+        "name": "Bacterial Disease",
+        "description": "A broad model category for potato leaves with visual patterns associated with bacterial disease. It does not identify a specific bacterium.",
         "symptoms": [
-            "Brown or dark spots on leaves",
-            "Circular or target-like patterns may appear",
-            "Older leaves are often affected first",
-            "Severely affected leaves can yellow and die",
+            "Water-soaked, brown, or dark leaf lesions",
+            "Yellowing or wilting around affected tissue",
+            "Lesions may enlarge under favorable conditions",
+            "Severely affected tissue may collapse",
         ],
         "causes": [
-            "Fungal infection",
-            "Warm and humid conditions",
-            "Poor air circulation",
-            "Infected plant debris",
+            "Bacterial pathogens",
+            "Wet or humid conditions",
+            "Infected planting material or debris",
+            "Contaminated tools, water, or handling",
         ],
         "actions": [
-            "Remove severely affected leaves when practical",
-            "Improve plant spacing and air circulation",
+            "Remove severely affected material when practical",
             "Avoid unnecessary overhead irrigation",
-            "Remove infected plant debris",
-            "Use locally recommended fungicide practices when appropriate",
+            "Disinfect tools between plants",
+            "Remove infected debris from the growing area",
+            "Seek local agricultural advice before treatment decisions",
         ],
         "prevention": [
             "Use healthy planting material",
             "Maintain field sanitation",
-            "Avoid prolonged leaf wetness",
-            "Monitor plants regularly",
+            "Reduce prolonged leaf wetness",
+            "Monitor nearby plants regularly",
         ],
     },
-    "Potato___Late_blight": {
-        "name": "Late Blight",
-        "description": "A potentially fast-spreading potato disease, especially under cool and humid conditions.",
+    "Fungi": {
+        "name": "Fungal Disease",
+        "description": "A broad model category for potato leaves with visual patterns associated with fungal disease. It does not identify a specific fungal species.",
         "symptoms": [
-            "Dark brown or black irregular lesions",
-            "Water-soaked appearance may occur",
-            "Lesions can expand quickly",
-            "Leaves can collapse when infection becomes severe",
+            "Spots or irregular lesions on leaves",
+            "Yellowing around damaged tissue",
+            "Powdery, fuzzy, or discolored growth may occur",
+            "Severe infection can cause leaf loss",
         ],
         "causes": [
-            "Pathogen infection",
-            "Cool and humid weather",
-            "Extended leaf wetness",
-            "Poor field sanitation",
+            "Fungal pathogens",
+            "Warm, humid, or persistently wet conditions",
+            "Poor air circulation",
+            "Infected crop residue",
         ],
         "actions": [
-            "Remove severely infected plant material where practical",
-            "Improve air circulation",
+            "Remove severely affected material when practical",
+            "Improve plant spacing and air circulation",
             "Avoid prolonged leaf wetness",
-            "Monitor nearby plants carefully",
+            "Remove infected debris",
             "Follow locally recommended disease-management guidance",
         ],
         "prevention": [
-            "Use disease-free planting material",
-            "Inspect plants frequently",
+            "Use healthy planting material",
             "Maintain field sanitation",
-            "Avoid excessive irrigation",
-            "Act early when symptoms appear",
+            "Avoid unnecessary overhead irrigation",
+            "Inspect plants regularly",
         ],
     },
-    "Potato___healthy": {
+    "Healthy": {
         "name": "Healthy",
         "description": "The model classified the uploaded potato leaf as healthy.",
         "symptoms": [
@@ -94,6 +91,64 @@ DISEASE_INFO = {
             "Monitor leaves regularly",
             "Maintain appropriate plant spacing",
             "Control pests and weeds",
+            "Maintain field hygiene",
+        ],
+    },
+    "Phytopthora": {
+        "name": "Phytophthora Disease",
+        "description": "A model category labeled Phytopthora in the dataset and displayed as Phytophthora. A leaf image cannot confirm the pathogen or distinguish every look-alike condition.",
+        "symptoms": [
+            "Dark or water-soaked leaf lesions",
+            "Rapidly expanding damaged areas may occur",
+            "Yellowing or collapse of affected leaves",
+            "Stem or tuber symptoms may also require inspection",
+        ],
+        "causes": [
+            "Phytophthora-like pathogen activity",
+            "Cool, wet, or humid conditions",
+            "Extended leaf wetness",
+            "Infected plant material or field debris",
+        ],
+        "actions": [
+            "Separate and inspect affected plants when practical",
+            "Reduce prolonged leaf wetness",
+            "Remove infected debris safely",
+            "Monitor nearby plants for rapid spread",
+            "Consult local agricultural guidance promptly",
+        ],
+        "prevention": [
+            "Use disease-free planting material",
+            "Maintain drainage and air circulation",
+            "Avoid moving wet, contaminated soil or debris",
+            "Inspect plants regularly during wet weather",
+        ],
+    },
+    "Virus": {
+        "name": "Viral Disease",
+        "description": "A broad model category for potato leaves with visual patterns associated with viral disease. Laboratory or expert testing may be needed for confirmation.",
+        "symptoms": [
+            "Mosaic, mottling, or unusual leaf coloration",
+            "Leaf curling or distortion",
+            "Stunting or reduced plant vigor",
+            "Symptoms can vary with cultivar and infection timing",
+        ],
+        "causes": [
+            "Plant viruses",
+            "Infected seed or planting material",
+            "Transmission by insect vectors or handling",
+            "Infected nearby plants",
+        ],
+        "actions": [
+            "Remove strongly symptomatic plants where practical",
+            "Control likely vector pests using local guidance",
+            "Disinfect tools between plants",
+            "Avoid propagating from symptomatic plants",
+            "Seek expert confirmation before making treatment decisions",
+        ],
+        "prevention": [
+            "Use certified or healthy planting material",
+            "Monitor plants and vector populations",
+            "Remove volunteer plants and crop debris",
             "Maintain field hygiene",
         ],
     },
@@ -131,8 +186,7 @@ def _valid_guidance(content):
 def generate_disease_guidance(predicted_class):
     """Generate cached guidance, returning None when the provider is
     unavailable. Cached for GUIDANCE_TTL_SECONDS (default 24h)."""
-    api_key = config.OPENROUTER_API_KEY
-    if not api_key:
+    if not llm.is_configured():
         return None
 
     now = time.time()
@@ -142,44 +196,38 @@ def generate_disease_guidance(predicted_class):
             return cached[1]
 
     try:
-        from openrouter import OpenRouter
-
         base_info = DISEASE_INFO[predicted_class]
-        with OpenRouter(api_key=api_key) as client:
-            response = client.chat.send(
-                model=config.OPENROUTER_MODEL,
-                stream=False,
-                temperature=0.2,
-                max_tokens=700,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": (
-                            "You are a cautious agricultural information assistant. "
-                            "Return valid JSON only with exactly these fields: "
-                            "description (string), symptoms (array of strings), "
-                            "causes (array of strings), actions (array of strings), "
-                            "prevention (array of strings). Provide general guidance "
-                            "for potato plants. Do not claim certainty, invent facts, "
-                            "or provide pesticide names, dosage, or application rates. "
-                            "Recommend local agricultural guidance for treatment decisions."
-                        ),
-                    },
-                    {
-                        "role": "user",
-                        "content": (
-                            f"Generate concise guidance for {base_info['name']}. "
-                            "Use this existing reference as context, but improve its "
-                            f"clarity without contradicting it:\n{json.dumps(base_info)}"
-                        ),
-                    },
-                ],
-            )
-        content = response.choices[0].message.content
-        if not isinstance(content, str):
+        content = llm.chat_completion(
+            [
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a cautious agricultural information assistant. "
+                        "Return valid JSON only with exactly these fields: "
+                        "description (string), symptoms (array of strings), "
+                        "causes (array of strings), actions (array of strings), "
+                        "prevention (array of strings). Provide general guidance "
+                        "for potato plants. Do not claim certainty, invent facts, "
+                        "or provide pesticide names, dosage, or application rates. "
+                        "Recommend local agricultural guidance for treatment decisions."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": (
+                        f"Generate concise guidance for {base_info['name']}. "
+                        "Use this existing reference as context, but improve its "
+                        f"clarity without contradicting it:\n{json.dumps(base_info)}"
+                    ),
+                },
+            ],
+            temperature=0.2,
+            max_tokens=1500,
+            session=f"guidance:{predicted_class}",
+        )
+        if not content:
             return None
 
-        content = content.strip()
         if content.startswith("```"):
             content = content.split("\n", 1)[1].rsplit("```", 1)[0].strip()
         guidance = _valid_guidance(json.loads(content))
@@ -194,43 +242,12 @@ def generate_disease_guidance(predicted_class):
 
 
 def get_disease_info(predicted_class):
-    """Return display content and whether it came from OpenRouter."""
+    """Return display content and the source of the guidance."""
     fallback = DISEASE_INFO[predicted_class]
     generated = generate_disease_guidance(predicted_class)
     if not generated:
-        return fallback, False
+        return fallback, "builtin"
 
     info = dict(fallback)
     info.update(generated)
-    return info, True
-
-
-def check_openrouter_api_key():
-    """Check the configured key without ever returning or displaying it."""
-    api_key = config.OPENROUTER_API_KEY
-    if not api_key:
-        return False, "OPENROUTER_API_KEY is not configured."
-
-    request = Request(
-        "https://openrouter.ai/api/v1/key",
-        headers={"Authorization": f"Bearer {api_key}"},
-        method="GET",
-    )
-
-    try:
-        with urlopen(request, timeout=10) as response:
-            payload = json.loads(response.read().decode("utf-8"))
-            key_data = payload.get("data", {})
-            if key_data.get("disabled") is True:
-                return False, "OpenRouter accepted the request, but this key is disabled."
-            return True, "OpenRouter API key is valid and active."
-    except HTTPError as exc:
-        if exc.code == 401:
-            return False, "OpenRouter rejected the API key (401 Unauthorized)."
-        if exc.code == 429:
-            return False, "OpenRouter rate-limited the key check (429 Too Many Requests)."
-        return False, f"OpenRouter key check failed with HTTP {exc.code}."
-    except URLError:
-        return False, "Could not reach OpenRouter. Check the server network connection."
-    except Exception:
-        return False, "OpenRouter returned an unexpected response during the key check."
+    return info, llm.resolve_provider()

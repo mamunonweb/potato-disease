@@ -40,7 +40,7 @@ services:
       - 'traefik.http.routers.potato_backend.tls=true'
       - 'traefik.http.routers.potato_backend.tls.certresolver=letsencrypt'
       - 'traefik.http.routers.potato_backend.priority=100'
-      # Basic abuse protection for the public API (incl. OpenRouter-backed chat).
+      # Basic abuse protection for the public API (incl. provider-backed chat).
       - 'traefik.http.middlewares.potato_api_ratelimit.ratelimit.average=10'
       - 'traefik.http.middlewares.potato_api_ratelimit.ratelimit.burst=20'
       - 'traefik.http.routers.potato_backend.middlewares=potato_api_ratelimit'

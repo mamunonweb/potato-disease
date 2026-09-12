@@ -16,7 +16,7 @@ export interface GradcamInfo {
 }
 
 export interface GuidanceInfo {
-  source: 'openrouter' | 'builtin'
+  source: 'openrouter' | 'opencode' | 'builtin'
   description: string
   symptoms: string[]
   causes: string[]

@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter
 
-from services import model
+from services import llm, model
 
 router = APIRouter()
 
@@ -15,4 +15,10 @@ def health() -> dict:
 @router.get("/health/ready")
 def ready() -> dict:
     loaded, error = model.get_model()
-    return {"status": "ok", "modelLoaded": loaded is not None, "error": error}
+    return {
+        "status": "ok",
+        "modelLoaded": loaded is not None,
+        "error": error,
+        "chatProvider": llm.resolve_provider(),
+        "chatConfigured": llm.is_configured(),
+    }

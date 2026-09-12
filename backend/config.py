@@ -8,8 +8,16 @@ MODEL_PATH = os.getenv(
     "MODEL_PATH",
     os.path.join(os.path.dirname(BACKEND_DIR), "explainable_cnn_model.keras"),
 )
+# Chat/guidance provider: "openrouter" or "opencode".
+CHAT_PROVIDER = os.getenv("CHAT_PROVIDER", "openrouter").strip().lower()
+
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
 OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "openrouter/free")
+OPENROUTER_BASE_URL = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
+
+OPENCODE_API_KEY = os.getenv("OPENCODE_API_KEY", "")
+OPENCODE_MODEL = os.getenv("OPENCODE_MODEL", "deepseek-v4.1-flash")
+OPENCODE_BASE_URL = os.getenv("OPENCODE_BASE_URL", "https://opencode.ai/zen/go/v1")
 
 ALLOWED_ORIGINS = [
     origin.strip()
