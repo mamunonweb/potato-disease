@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { Download, Layers, Loader2, ScanSearch, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
@@ -41,18 +42,10 @@ function csvEscape(value: string): string {
   return value
 }
 
-function downloadCsv(results: BatchItem[]) {
-  const header = [
-    'Image',
-    'Prediction',
-    'Confidence (%)',
-    'Top-1',
-    'Top-2',
-    'Top-3',
-  ]
+function downloadCsv(results: BatchItem[], header: string[], errorLabel: string) {
   const rows = results.map((item) => {
     if (item.status === 'error') {
-      return [item.filename, 'Error', '', '', '', item.error]
+      return [item.filename, errorLabel, '', '', '', item.error]
     }
     const top = item.top_predictions.slice(0, 3)
     return [
@@ -82,13 +75,17 @@ export function BatchPage() {
   const inputRef = useRef<HTMLInputElement>(null)
   const [files, setFiles] = useState<File[]>([])
   const [response, setResponse] = useState<BatchResponse | null>(null)
+  const { t } = useTranslation()
 
   const mutation = useMutation({
     mutationFn: predictBatch,
     onSuccess: (data) => {
       setResponse(data)
       toast.success(
-        `${data.results.length - data.failed_count} of ${data.results.length} images analyzed.`,
+        t('batch.analyzed', {
+          done: data.results.length - data.failed_count,
+          total: data.results.length,
+        }),
       )
     },
     onError: (error: Error) => toast.error(error.message),
@@ -100,11 +97,11 @@ export function BatchPage() {
     for (const file of selected) {
       const ext = file.name.split('.').pop()?.toLowerCase()
       if (!['jpg', 'jpeg', 'png'].includes(ext ?? '')) {
-        toast.error(`${file.name}: unsupported type. Use JPG or PNG.`)
+        toast.error(t('batch.unsupportedType', { name: file.name }))
         continue
       }
       if (file.size > MAX_FILE_MB * 1024 * 1024) {
-        toast.error(`${file.name}: larger than ${MAX_FILE_MB} MB.`)
+        toast.error(t('batch.tooLarge', { name: file.name, mb: MAX_FILE_MB }))
         continue
       }
       accepted.push(file)
@@ -112,7 +109,7 @@ export function BatchPage() {
     setFiles((current) => {
       const merged = [...current, ...accepted].slice(0, MAX_BATCH_FILES)
       if (current.length + accepted.length > MAX_BATCH_FILES) {
-        toast.error(`Batch analysis accepts at most ${MAX_BATCH_FILES} images.`)
+        toast.error(t('batch.tooMany', { max: MAX_BATCH_FILES }))
       }
       return merged
     })
@@ -123,23 +120,20 @@ export function BatchPage() {
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">
-          Batch Analysis
+          {t('batch.title')}
         </h1>
         <p className="text-muted-foreground text-sm">
-          Analyze up to {MAX_BATCH_FILES} leaf photos at once, then export the
-          results as CSV. No Grad-CAM heatmaps here — use single-image detection
-          for explanations.
+          {t('batch.subtitle', { max: MAX_BATCH_FILES })}
         </p>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Layers className="text-primary size-4" /> Select images
+            <Layers className="text-primary size-4" /> {t('batch.selectImages')}
           </CardTitle>
           <CardDescription>
-            JPG or PNG, up to {MAX_FILE_MB} MB each, maximum {MAX_BATCH_FILES}{' '}
-            images per batch.
+            {t('batch.selectHint', { mb: MAX_FILE_MB, max: MAX_BATCH_FILES })}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
@@ -156,7 +150,7 @@ export function BatchPage() {
             onClick={() => inputRef.current?.click()}
             disabled={mutation.isPending}
           >
-            Choose images
+            {t('batch.chooseImages')}
           </Button>
           {files.length > 0 && (
             <div className="flex flex-wrap gap-2">
@@ -169,7 +163,7 @@ export function BatchPage() {
                   {file.name}
                   <button
                     type="button"
-                    aria-label={`Remove ${file.name}`}
+                    aria-label={t('batch.remove', { name: file.name })}
                     className="hover:bg-foreground/10 rounded-full p-0.5"
                     disabled={mutation.isPending}
                     onClick={() =>
@@ -191,13 +185,13 @@ export function BatchPage() {
           >
             {mutation.isPending ? (
               <>
-                <Loader2 className="size-4 animate-spin" /> Analyzing{' '}
-                {files.length} image{files.length === 1 ? '' : 's'}…
+                <Loader2 className="size-4 animate-spin" />{' '}
+                {t('batch.analyzing', { count: files.length })}
               </>
             ) : (
               <>
-                <ScanSearch className="size-4" /> Analyze {files.length} image
-                {files.length === 1 ? '' : 's'}
+                <ScanSearch className="size-4" />{' '}
+                {t('batch.analyze', { count: files.length })}
               </>
             )}
           </Button>
@@ -207,17 +201,17 @@ export function BatchPage() {
       {response && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Results</CardTitle>
+            <CardTitle className="text-base">{t('batch.results')}</CardTitle>
             <div className="flex flex-wrap gap-2">
               <Badge className={PREDICTION_STYLES.Healthy}>
-                Healthy: {response.healthy_count}
+                {t('batch.healthyCount', { count: response.healthy_count })}
               </Badge>
               <Badge className={PREDICTION_STYLES.Bacteria}>
-                Disease: {response.disease_count}
+                {t('batch.diseaseCount', { count: response.disease_count })}
               </Badge>
               {response.failed_count > 0 && (
                 <Badge variant="destructive">
-                  Failed: {response.failed_count}
+                  {t('batch.failedCount', { count: response.failed_count })}
                 </Badge>
               )}
             </div>
@@ -226,10 +220,10 @@ export function BatchPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Image</TableHead>
-                  <TableHead>Prediction</TableHead>
-                  <TableHead>Confidence</TableHead>
-                  <TableHead>Top-3</TableHead>
+                  <TableHead>{t('batch.tableImage')}</TableHead>
+                  <TableHead>{t('batch.tablePrediction')}</TableHead>
+                  <TableHead>{t('batch.tableConfidence')}</TableHead>
+                  <TableHead>{t('batch.tableTop3')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -277,9 +271,22 @@ export function BatchPage() {
             <Button
               variant="outline"
               className="w-fit"
-              onClick={() => downloadCsv(response.results)}
+              onClick={() =>
+                downloadCsv(
+                  response.results,
+                  [
+                    t('batch.csvImage'),
+                    t('batch.csvPrediction'),
+                    t('batch.csvConfidence'),
+                    t('batch.csvTop1'),
+                    t('batch.csvTop2'),
+                    t('batch.csvTop3'),
+                  ],
+                  t('batch.errorLabel'),
+                )
+              }
             >
-              <Download className="size-4" /> Download CSV
+              <Download className="size-4" /> {t('batch.downloadCsv')}
             </Button>
           </CardContent>
         </Card>

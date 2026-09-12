@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react'
 import { NavLink } from 'react-router'
+import { useTranslation } from 'react-i18next'
 import {
   BarChart3,
   BookOpen,
@@ -8,35 +9,38 @@ import {
   MessageCircle,
   ScanSearch,
 } from 'lucide-react'
+import { LanguageToggle } from '@/components/language-toggle'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { cn } from '@/lib/utils'
 
 interface NavItem {
   to: string
-  label: string
+  labelKey: string
   icon: ComponentType<{ className?: string }>
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { to: '/', label: 'Detect', icon: ScanSearch },
-  { to: '/results', label: 'Results', icon: BarChart3 },
-  { to: '/batch', label: 'Batch', icon: Layers },
-  { to: '/chat', label: 'Chat', icon: MessageCircle },
-  { to: '/info', label: 'Info', icon: BookOpen },
+  { to: '/', labelKey: 'nav.detect', icon: ScanSearch },
+  { to: '/results', labelKey: 'nav.results', icon: BarChart3 },
+  { to: '/batch', labelKey: 'nav.batch', icon: Layers },
+  { to: '/chat', labelKey: 'nav.chat', icon: MessageCircle },
+  { to: '/info', labelKey: 'nav.info', icon: BookOpen },
 ]
 
 export function AppShell({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation()
+
   return (
     <div className="bg-background flex h-svh flex-col overflow-hidden">
       <header className="bg-background/90 sticky top-0 z-10 border-b backdrop-blur">
         <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-4 px-4">
           <NavLink to="/" className="flex items-center gap-2 font-semibold">
             <Leaf className="text-primary size-5" />
-            <span className="hidden sm:inline">Potato Disease Detection</span>
-            <span className="sm:hidden">Potato</span>
+            <span className="hidden sm:inline">{t('common.appTitle')}</span>
+            <span className="sm:hidden">{t('common.appTitleShort')}</span>
           </NavLink>
           <nav className="flex items-center gap-1">
-            {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
+            {NAV_ITEMS.map(({ to, labelKey, icon: Icon }) => (
               <NavLink
                 key={to}
                 to={to}
@@ -50,9 +54,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 }
               >
                 <Icon className="size-4" />
-                <span className="hidden sm:inline">{label}</span>
+                <span className="hidden sm:inline">{t(labelKey)}</span>
               </NavLink>
             ))}
+            <LanguageToggle />
             <ThemeToggle />
           </nav>
         </div>
@@ -62,7 +67,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </main>
       <footer className="border-t py-4">
         <p className="text-muted-foreground mx-auto w-full max-w-5xl px-4 text-xs">
-          AI-based preliminary classification — not a definitive diagnosis.
+          {t('common.footer')}
         </p>
       </footer>
     </div>

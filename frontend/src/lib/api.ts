@@ -1,3 +1,4 @@
+import { currentLanguage } from '@/i18n'
 import type {
   BatchResponse,
   ChatRequestBody,
@@ -23,6 +24,7 @@ async function errorDetail(res: Response): Promise<string> {
 export async function predictImage(file: File): Promise<PredictionResponse> {
   const form = new FormData()
   form.append('image', file)
+  form.append('language', currentLanguage())
   const res = await fetch(`${API_BASE_URL}/api/predict`, {
     method: 'POST',
     body: form,
@@ -34,6 +36,7 @@ export async function predictImage(file: File): Promise<PredictionResponse> {
 export async function predictBatch(files: File[]): Promise<BatchResponse> {
   const form = new FormData()
   for (const file of files) form.append('images', file)
+  form.append('language', currentLanguage())
   const res = await fetch(`${API_BASE_URL}/api/predict/batch`, {
     method: 'POST',
     body: form,
@@ -45,6 +48,7 @@ export async function predictBatch(files: File[]): Promise<BatchResponse> {
 export async function reportPdf(file: File): Promise<Blob> {
   const form = new FormData()
   form.append('image', file)
+  form.append('language', currentLanguage())
   const res = await fetch(`${API_BASE_URL}/api/report`, {
     method: 'POST',
     body: form,
@@ -60,7 +64,7 @@ export async function streamChat(
   const res = await fetch(`${API_BASE_URL}/api/chat/stream`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
+    body: JSON.stringify({ ...body, language: currentLanguage() }),
   })
   if (!res.ok || !res.body) throw new ApiError(await errorDetail(res))
 

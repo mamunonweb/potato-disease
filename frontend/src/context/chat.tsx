@@ -6,6 +6,8 @@ import {
   type ReactNode,
   type SetStateAction,
 } from 'react'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 import { usePrediction } from '@/context/prediction'
 import type { PredictionResponse } from '@/lib/types'
 
@@ -23,21 +25,31 @@ interface ChatContextValue {
 
 const ChatContext = createContext<ChatContextValue | null>(null)
 
-function greetingFor(prediction: PredictionResponse): ChatMessage {
+function greetingFor(prediction: PredictionResponse, t: TFunction): ChatMessage {
   return {
     role: 'assistant',
-    content: `Your leaf was classified as ${prediction.display_name} with ${(prediction.confidence * 100).toFixed(1)}% confidence. Ask me anything about it — symptoms, causes, or what to do next.`,
+    content: t('chat.greeting', {
+      name: t(`classes.${prediction.predicted_class}`, {
+        defaultValue: prediction.display_name,
+      }),
+      confidence: (prediction.confidence * 100).toFixed(1),
+    }),
   }
 }
 
 export function ChatProvider({ children }: { children: ReactNode }) {
   const { prediction } = usePrediction()
+  const { t, i18n } = useTranslation()
+  const language = i18n.resolvedLanguage ?? i18n.language
+
   const [state, setState] = useState<{
     prediction: PredictionResponse | null
+    language: string
     messages: ChatMessage[]
   }>(() => ({
     prediction: prediction ?? null,
-    messages: prediction ? [greetingFor(prediction)] : [],
+    language,
+    messages: prediction ? [greetingFor(prediction, t)] : [],
   }))
   const [streaming, setStreaming] = useState(false)
 
@@ -51,7 +63,17 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   if (state.prediction !== prediction) {
     setState({
       prediction: prediction ?? null,
-      messages: prediction ? [greetingFor(prediction)] : [],
+      language,
+      messages: prediction ? [greetingFor(prediction, t)] : [],
+    })
+  } else if (state.language !== language) {
+    // Language changed: refresh the opening greeting without dropping the chat.
+    setState((prev) => {
+      const messages = [...prev.messages]
+      if (messages.length > 0 && messages[0].role === 'assistant' && prediction) {
+        messages[0] = greetingFor(prediction, t)
+      }
+      return { ...prev, language, messages }
     })
   }
 

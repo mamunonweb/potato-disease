@@ -6,8 +6,8 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 
 from schemas import ChatRequest, ChatResponse
-from services import chat
-from services.guidance import DISEASE_INFO
+from services import chat, localization
+from services.guidance import is_supported_class
 
 router = APIRouter()
 
@@ -18,19 +18,21 @@ CHAT_DISCLAIMER = (
 
 
 def _validate(request: ChatRequest) -> None:
-    if request.predicted_class not in DISEASE_INFO:
+    if not is_supported_class(request.predicted_class):
         raise HTTPException(status_code=422, detail="Unknown disease class.")
 
 
 @router.post("/api/chat")
 def chat_once(request: ChatRequest) -> ChatResponse:
     _validate(request)
+    language = localization.normalize_language(request.language)
     try:
         reply, source = chat.chat_reply(
             request.predicted_class,
             request.confidence,
             request.message,
             [turn.model_dump() for turn in request.history],
+            language,
         )
     except Exception:
         # Never leak stack traces; the chat is an enhancement.
@@ -48,6 +50,7 @@ def chat_once(request: ChatRequest) -> ChatResponse:
 @router.post("/api/chat/stream")
 def chat_stream(request: ChatRequest) -> StreamingResponse:
     _validate(request)
+    language = localization.normalize_language(request.language)
 
     def generate():
         try:
@@ -56,6 +59,7 @@ def chat_stream(request: ChatRequest) -> StreamingResponse:
                 request.confidence,
                 request.message,
                 [turn.model_dump() for turn in request.history],
+                language,
             ):
                 yield "data: " + json.dumps({"type": "delta", "text": delta}) + "\n\n"
             yield "data: " + json.dumps({"type": "done", "disclaimer": CHAT_DISCLAIMER}) + "\n\n"

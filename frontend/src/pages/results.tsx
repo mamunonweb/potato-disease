@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
 import { Link, Navigate } from 'react-router'
+import { useTranslation } from 'react-i18next'
 import { BookOpen, FileDown, MessageCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
@@ -10,14 +11,6 @@ import { Separator } from '@/components/ui/separator'
 import { usePrediction } from '@/context/prediction'
 import { reportPdf } from '@/lib/api'
 
-const DISPLAY_NAMES: Record<string, string> = {
-  Bacteria: 'Bacterial Disease',
-  Fungi: 'Fungal Disease',
-  Healthy: 'Healthy',
-  Phytopthora: 'Phytophthora Disease',
-  Virus: 'Viral Disease',
-}
-
 const SEVERITY_STYLES: Record<string, string> = {
   Mild: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400',
   Moderate: 'bg-amber-500/15 text-amber-700 dark:text-amber-400',
@@ -26,10 +19,11 @@ const SEVERITY_STYLES: Record<string, string> = {
 
 export function ResultsPage() {
   const { prediction, imageUrl, file } = usePrediction()
+  const { t } = useTranslation()
 
   const reportMutation = useMutation({
     mutationFn: () => {
-      if (!file) return Promise.reject(new Error('Original image is gone.'))
+      if (!file) return Promise.reject(new Error(t('results.originalGone')))
       return reportPdf(file)
     },
     onSuccess: (blob) => {
@@ -39,7 +33,7 @@ export function ResultsPage() {
       link.download = 'potato_disease_report.pdf'
       link.click()
       URL.revokeObjectURL(url)
-      toast.success('PDF report downloaded.')
+      toast.success(t('results.reportDownloaded'))
     },
     onError: (error: Error) => toast.error(error.message),
   })
@@ -51,43 +45,45 @@ export function ResultsPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Detection results</h1>
+        <h1 className="text-2xl font-semibold">{t('results.title')}</h1>
         <Badge variant={isHealthy ? 'secondary' : 'destructive'}>
-          {isHealthy ? 'Healthy' : 'Disease detected'}
+          {isHealthy ? t('results.healthy') : t('results.diseaseDetected')}
         </Badge>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Grad-CAM explanation</CardTitle>
+            <CardTitle className="text-base">
+              {t('results.gradcamTitle')}
+            </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             <div className="grid gap-3 sm:grid-cols-2">
               <figure>
                 <img
                   src={imageUrl}
-                  alt="Uploaded potato leaf"
+                  alt={t('results.uploadedAlt')}
                   className="aspect-square w-full rounded-lg border object-contain"
                 />
                 <figcaption className="text-muted-foreground mt-1 text-center text-xs">
-                  Original
+                  {t('results.original')}
                 </figcaption>
               </figure>
               {prediction.gradcam ? (
                 <figure>
                   <img
                     src={prediction.gradcam.image_data_uri}
-                    alt="Grad-CAM attention overlay"
+                    alt={t('results.gradcamAlt')}
                     className="aspect-square w-full rounded-lg border object-contain"
                   />
                   <figcaption className="text-muted-foreground mt-1 text-center text-xs">
-                    Attention overlay
+                    {t('results.attentionOverlay')}
                   </figcaption>
                 </figure>
               ) : (
                 <div className="text-muted-foreground flex aspect-square items-center justify-center rounded-lg border border-dashed p-4 text-center text-xs">
-                  {prediction.gradcam_note ?? 'Grad-CAM unavailable.'}
+                  {t('results.gradcamUnavailable')}
                 </div>
               )}
             </div>
@@ -98,11 +94,17 @@ export function ResultsPage() {
                     SEVERITY_STYLES[prediction.gradcam.severity.level] ?? ''
                   }
                 >
-                  {prediction.gradcam.severity.level}
+                  {t(`severity.${prediction.gradcam.severity.level}`, {
+                    defaultValue: prediction.gradcam.severity.level,
+                  })}
                 </Badge>
                 <span>
-                  attention level — an experimental estimate, not a validated
-                  severity percentage.
+                  {t('results.attentionLevel', {
+                    level: t(
+                      `severity.${prediction.gradcam.severity.level}`,
+                      { defaultValue: prediction.gradcam.severity.level },
+                    ),
+                  })}
                 </span>
               </div>
             )}
@@ -111,7 +113,9 @@ export function ResultsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Prediction</CardTitle>
+            <CardTitle className="text-base">
+              {t('results.predictionTitle')}
+            </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             <div>
@@ -119,17 +123,25 @@ export function ResultsPage() {
                 {prediction.display_name}
               </p>
               <p className="text-muted-foreground text-sm">
-                Confidence {(prediction.confidence * 100).toFixed(1)}%
+                {t('results.confidence', {
+                  value: (prediction.confidence * 100).toFixed(1),
+                })}
               </p>
             </div>
             <Separator />
             <div className="flex flex-col gap-2">
-              <p className="text-sm font-medium">Class probabilities</p>
+              <p className="text-sm font-medium">
+                {t('results.classProbabilities')}
+              </p>
               {Object.entries(prediction.probabilities).map(
                 ([className, value]) => (
                   <div key={className} className="flex flex-col gap-1">
                     <div className="flex justify-between text-sm">
-                      <span>{DISPLAY_NAMES[className] ?? className}</span>
+                      <span>
+                        {t(`classes.${className}`, {
+                          defaultValue: className,
+                        })}
+                      </span>
                       <span>{(value * 100).toFixed(1)}%</span>
                     </div>
                     <Progress value={value * 100} />
@@ -140,12 +152,12 @@ export function ResultsPage() {
             <div className="flex flex-wrap gap-2 pt-2">
               <Button asChild>
                 <Link to="/chat">
-                  <MessageCircle className="size-4" /> Ask AI about this
+                  <MessageCircle className="size-4" /> {t('results.askAi')}
                 </Link>
               </Button>
               <Button asChild variant="outline">
                 <Link to="/info">
-                  <BookOpen className="size-4" /> Disease information
+                  <BookOpen className="size-4" /> {t('results.diseaseInfo')}
                 </Link>
               </Button>
               <Button
@@ -154,7 +166,9 @@ export function ResultsPage() {
                 onClick={() => reportMutation.mutate()}
               >
                 <FileDown className="size-4" />
-                {reportMutation.isPending ? 'Generating…' : 'PDF report'}
+                {reportMutation.isPending
+                  ? t('results.generating')
+                  : t('results.pdfReport')}
               </Button>
             </div>
           </CardContent>

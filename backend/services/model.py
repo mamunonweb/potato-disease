@@ -12,6 +12,7 @@ import numpy as np
 from PIL import Image
 
 import config
+from services import localization
 
 logger = logging.getLogger(__name__)
 
@@ -26,12 +27,29 @@ CLASS_NAMES = [
 ]
 
 DISPLAY_NAMES = {
-    "Bacteria": "Bacterial Disease",
-    "Fungi": "Fungal Disease",
-    "Healthy": "Healthy",
-    "Phytopthora": "Phytophthora Disease",
-    "Virus": "Viral Disease",
+    "en": {
+        "Bacteria": "Bacterial Disease",
+        "Fungi": "Fungal Disease",
+        "Healthy": "Healthy",
+        "Phytopthora": "Phytophthora Disease",
+        "Virus": "Viral Disease",
+    },
+    "bn": {
+        "Bacteria": "ব্যাকটেরিয়াজনিত রোগ",
+        "Fungi": "ছত্রাকজনিত রোগ",
+        "Healthy": "সুস্থ",
+        "Phytopthora": "ফাইটোফথোরা রোগ",
+        "Virus": "ভাইরাসজনিত রোগ",
+    },
 }
+
+
+def display_name(class_name, language=localization.DEFAULT_LANGUAGE):
+    """Return the localized display name for a class."""
+    names = DISPLAY_NAMES.get(
+        localization.normalize_language(language), DISPLAY_NAMES["en"]
+    )
+    return names.get(class_name, class_name)
 
 LOW_CONFIDENCE_THRESHOLD = 0.60
 UNCERTAIN_CONFIDENCE = 0.55

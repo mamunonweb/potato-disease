@@ -71,6 +71,7 @@ export interface ChatRequestBody {
   confidence: number
   message: string
   history: ChatMessagePayload[]
+  language?: string
 }
 
 export interface ChatStreamEvent {

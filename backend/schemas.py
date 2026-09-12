@@ -82,6 +82,7 @@ class ChatRequest(BaseModel):
     confidence: float = Field(ge=0.0, le=1.0)
     message: str = Field(min_length=1, max_length=2000)
     history: list[ChatTurn] = Field(default_factory=list)
+    language: str = "en"
 
 
 class ChatChoiceDelta(BaseModel):

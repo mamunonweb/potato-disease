@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Camera, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -16,6 +17,7 @@ interface CameraCaptureProps {
 }
 
 export function CameraCapture({ onCapture }: CameraCaptureProps) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [ready, setReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -38,9 +40,7 @@ export function CameraCapture({ onCapture }: CameraCaptureProps) {
     setStarting(true)
 
     if (!navigator.mediaDevices?.getUserMedia) {
-      setError(
-        'Camera access is not available. Use HTTPS (or localhost) and a browser that supports getUserMedia.',
-      )
+      setError('camera.notAvailable')
       setStarting(false)
       return
     }
@@ -57,9 +57,7 @@ export function CameraCapture({ onCapture }: CameraCaptureProps) {
         setReady(true)
       })
       .catch(() => {
-        setError(
-          'Could not access the camera. Check browser permissions and try again.',
-        )
+        setError('camera.accessError')
         setStarting(false)
       })
 
@@ -92,20 +90,18 @@ export function CameraCapture({ onCapture }: CameraCaptureProps) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline">
-          <Camera className="size-4" /> Take a photo
+          <Camera className="size-4" /> {t('camera.takePhoto')}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Take a photo of the leaf</DialogTitle>
-          <DialogDescription>
-            Hold the leaf steady in good light, then capture.
-          </DialogDescription>
+          <DialogTitle>{t('camera.dialogTitle')}</DialogTitle>
+          <DialogDescription>{t('camera.dialogDescription')}</DialogDescription>
         </DialogHeader>
         <div className="overflow-hidden rounded-lg border bg-black">
           {error ? (
             <p className="text-muted-foreground p-6 text-center text-sm">
-              {error}
+              {t(error)}
             </p>
           ) : (
             <video
@@ -120,11 +116,11 @@ export function CameraCapture({ onCapture }: CameraCaptureProps) {
           <Button className="w-full" disabled={!ready} onClick={capture}>
             {starting ? (
               <>
-                <Loader2 className="size-4 animate-spin" /> Starting camera…
+                <Loader2 className="size-4 animate-spin" /> {t('camera.starting')}
               </>
             ) : (
               <>
-                <Camera className="size-4" /> Capture photo
+                <Camera className="size-4" /> {t('camera.capture')}
               </>
             )}
           </Button>

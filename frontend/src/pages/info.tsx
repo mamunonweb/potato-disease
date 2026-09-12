@@ -1,4 +1,5 @@
 import { Link, Navigate } from 'react-router'
+import { useTranslation } from 'react-i18next'
 import {
   Bug,
   CheckCircle2,
@@ -14,19 +15,20 @@ import { usePrediction } from '@/context/prediction'
 
 export function InfoPage() {
   const { prediction } = usePrediction()
+  const { t } = useTranslation()
   if (!prediction) return <Navigate to="/" replace />
 
   const guidance = prediction.guidance
 
   const sections = [
-    { title: 'Symptoms', icon: Stethoscope, items: guidance.symptoms },
-    { title: 'Possible causes', icon: Bug, items: guidance.causes },
+    { title: t('info.symptoms'), icon: Stethoscope, items: guidance.symptoms },
+    { title: t('info.causes'), icon: Bug, items: guidance.causes },
     {
-      title: 'Recommended actions',
+      title: t('info.actions'),
       icon: CheckCircle2,
       items: guidance.actions,
     },
-    { title: 'Prevention', icon: ShieldCheck, items: guidance.prevention },
+    { title: t('info.prevention'), icon: ShieldCheck, items: guidance.prevention },
   ]
 
   return (
@@ -35,15 +37,15 @@ export function InfoPage() {
         <h1 className="text-2xl font-semibold">{prediction.display_name}</h1>
         <Badge variant="outline">
           {guidance.source === 'builtin'
-            ? 'Built-in guidance'
-            : 'AI-generated guidance'}
+            ? t('info.builtin')
+            : t('info.aiGenerated')}
         </Badge>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Info className="text-primary size-4" /> Overview
+            <Info className="text-primary size-4" /> {t('info.overview')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -76,7 +78,7 @@ export function InfoPage() {
       <div className="flex flex-wrap items-center gap-3">
         <Button asChild>
           <Link to="/chat">
-            <MessageCircle className="size-4" /> Ask AI about this
+            <MessageCircle className="size-4" /> {t('results.askAi')}
           </Link>
         </Button>
       </div>

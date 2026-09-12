@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Navigate } from 'react-router'
+import { useTranslation } from 'react-i18next'
 import { Bot, Send, User } from 'lucide-react'
 import { toast } from 'sonner'
 import { MarkdownContent } from '@/components/markdown-content'
@@ -15,6 +16,7 @@ import { cn } from '@/lib/utils'
 export function ChatPage() {
   const { prediction } = usePrediction()
   const { messages, setMessages, streaming, setStreaming } = useChat()
+  const { t } = useTranslation()
   const [input, setInput] = useState('')
   const bottomRef = useRef<HTMLDivElement>(null)
 
@@ -56,15 +58,13 @@ export function ChatPage() {
               return next
             })
           } else if (event.type === 'error') {
-            toast.error(event.text || 'The assistant is unavailable right now.')
+            toast.error(event.text || t('chat.unavailable'))
           }
         },
       )
     } catch (error) {
       toast.error(
-        error instanceof ApiError
-          ? error.message
-          : 'Could not reach the chat service.',
+        error instanceof ApiError ? error.message : t('chat.cannotReach'),
       )
     } finally {
       setMessages((prev) => {
@@ -73,7 +73,7 @@ export function ChatPage() {
         if (!last.content) {
           next[next.length - 1] = {
             ...last,
-            content: 'Sorry — I could not answer right now. Please try again.',
+            content: t('chat.fallback'),
           }
         }
         return next
@@ -85,7 +85,7 @@ export function ChatPage() {
   return (
     <div className="mx-auto flex min-h-105 w-full max-w-2xl flex-1 flex-col gap-4">
       <div className="flex shrink-0 flex-wrap items-center justify-between gap-2">
-        <h1 className="text-xl font-semibold">Disease assistant</h1>
+        <h1 className="text-xl font-semibold">{t('chat.title')}</h1>
         <Badge
           variant={
             prediction.predicted_class === 'Healthy'
@@ -150,14 +150,14 @@ export function ChatPage() {
               void send()
             }
           }}
-          placeholder="Ask about this condition…"
+          placeholder={t('chat.placeholder')}
           rows={2}
           maxLength={2000}
           className="resize-none"
         />
         <Button
           size="icon"
-          aria-label="Send message"
+          aria-label={t('chat.send')}
           disabled={streaming || !input.trim()}
           onClick={() => void send()}
         >

@@ -31,6 +31,14 @@ information, causes, solutions, and chat guidance.
   or opencode Zen) with an automatic fallback to built-in guidance when the
   service is unavailable.
 
+## Languages
+
+The interface supports **English** and **Bengali (বাংলা)**. The header language
+switcher changes all UI text and remembers the choice in the browser. The
+selected language is sent with every request, so the AI chat replies in that
+language and the disease guidance and PDF report are generated in it as well.
+PDFs use the bundled Google Sans (Latin + Bengali) font (`backend/assets/`).
+
 ## Model status
 
 The training notebook is configured for the current five-class dataset. Models

@@ -5,7 +5,7 @@ import io
 import logging
 
 import numpy as np
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from PIL import Image
 
 from config import MAX_BATCH_FILES, MAX_UPLOAD_MB
@@ -19,7 +19,8 @@ from schemas import (
     PredictionResponse,
     TopPrediction,
 )
-from services import gradcam, guidance, model, uploads
+from services import gradcam, guidance, localization, model, uploads
+
 
 router = APIRouter()
 
@@ -33,8 +34,12 @@ DISCLAIMER = (
 
 
 @router.post("/api/predict")
-async def predict(image: UploadFile = File(...)) -> PredictionResponse:
+async def predict(
+    image: UploadFile = File(...),  # noqa: B008
+    language: str = Form("en"),
+) -> PredictionResponse:
     pil_image = await uploads.read_image(image)
+    language = localization.normalize_language(language)
 
     try:
         predicted_class, confidence, probabilities = model.predict_image(pil_image)
@@ -77,17 +82,17 @@ async def predict(image: UploadFile = File(...)) -> PredictionResponse:
             "unavailable for this model architecture."
         )
 
-    info, source = guidance.get_disease_info(predicted_class)
+    info, source = guidance.get_disease_info(predicted_class, language)
 
     return PredictionResponse(
         predicted_class=predicted_class,
-        display_name=model.DISPLAY_NAMES[predicted_class],
+        display_name=model.display_name(predicted_class, language),
         confidence=confidence,
         probabilities={name: float(p) for name, p in zip(model.CLASS_NAMES, probabilities_list)},
         top_predictions=[
             TopPrediction(
                 className=name,
-                displayName=model.DISPLAY_NAMES[name],
+                displayName=model.display_name(name, language),
                 probability=p,
             )
             for name, p in top
@@ -107,8 +112,10 @@ HEALTHY_CLASS = "Healthy"
 
 @router.post("/api/predict/batch")
 async def predict_batch(
-    images: list[UploadFile] = File(...),
+    images: list[UploadFile] = File(...),  # noqa: B008
+    language: str = Form("en"),
 ) -> BatchResponse:
+    language = localization.normalize_language(language)
     if len(images) > MAX_BATCH_FILES:
         raise HTTPException(
             status_code=413,
@@ -144,12 +151,12 @@ async def predict_batch(
                     status="ok",
                     filename=filename,
                     predicted_class=predicted_class,
-                    display_name=model.DISPLAY_NAMES[predicted_class],
+                    display_name=model.display_name(predicted_class, language),
                     confidence=confidence,
                     top_predictions=[
                         TopPrediction(
                             className=name,
-                            displayName=model.DISPLAY_NAMES[name],
+                            displayName=model.display_name(name, language),
                             probability=p,
                         )
                         for name, p in top

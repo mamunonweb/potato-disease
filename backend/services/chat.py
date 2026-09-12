@@ -9,9 +9,9 @@ import hashlib
 import json
 
 import config
-from services import llm
+from services import llm, localization
 from services.guidance import get_disease_info
-from services.model import DISPLAY_NAMES
+from services.model import display_name as class_display_name
 
 SYSTEM_PROMPT_TEMPLATE = (
     "You are a cautious potato-plant-disease assistant. The user has "
@@ -20,6 +20,7 @@ SYSTEM_PROMPT_TEMPLATE = (
     "plant-care questions.\n\n"
     "Reference information:\n{info_json}\n\n"
     "Rules:\n"
+    "- Reply only in {language_name}.\n"
     "- Stay on topic: the detected condition, potato diseases, and potato "
     "plant care. Politely redirect unrelated questions.\n"
     "- Do not claim certainty, invent facts, or provide pesticide names, "
@@ -33,13 +34,13 @@ MAX_HISTORY_TURNS = config.CHAT_MAX_HISTORY_TURNS
 MAX_MESSAGE_CHARS = config.CHAT_MAX_MESSAGE_CHARS
 
 
-def _build_system_prompt(predicted_class, confidence):
-    info, source = get_disease_info(predicted_class)
-    display_name = DISPLAY_NAMES.get(predicted_class, info.get("name", predicted_class))
+def _build_system_prompt(predicted_class, confidence, language):
+    info, source = get_disease_info(predicted_class, language)
     prompt = SYSTEM_PROMPT_TEMPLATE.format(
-        display_name=display_name,
+        display_name=class_display_name(predicted_class, language),
         confidence_pct=confidence * 100,
-        info_json=json.dumps(info),
+        info_json=json.dumps(info, ensure_ascii=False),
+        language_name=localization.language_name(language),
     )
     return prompt, source
 
@@ -60,7 +61,7 @@ def _trim_history(history):
     return trimmed
 
 
-def _session_id(predicted_class, history, message):
+def _session_id(predicted_class, history, message, language):
     """Stable id for one conversation so opencode can route and cache it."""
     first_user_message = message
     for turn in history or []:
@@ -68,13 +69,15 @@ def _session_id(predicted_class, history, message):
         if turn.get("role") == "user" and content:
             first_user_message = content
             break
-    seed = f"{predicted_class}:{first_user_message[:200]}"
+    seed = f"{predicted_class}:{language}:{first_user_message[:200]}"
     return hashlib.sha1(seed.encode("utf-8")).hexdigest()[:32]
 
 
-def chat_reply(predicted_class, confidence, message, history):
+def chat_reply(predicted_class, confidence, message, history, language):
     """Return (reply_text, guidance_source) for one chat turn."""
-    system_prompt, source = _build_system_prompt(predicted_class, confidence)
+    system_prompt, source = _build_system_prompt(
+        predicted_class, confidence, language
+    )
     messages = (
         [{"role": "system", "content": system_prompt}]
         + _trim_history(history)
@@ -85,7 +88,7 @@ def chat_reply(predicted_class, confidence, message, history):
         messages,
         temperature=0.4,
         max_tokens=1024,
-        session=_session_id(predicted_class, history, message),
+        session=_session_id(predicted_class, history, message, language),
     )
     if not reply:
         return (
@@ -95,9 +98,9 @@ def chat_reply(predicted_class, confidence, message, history):
     return reply, source
 
 
-def chat_reply_stream(predicted_class, confidence, message, history):
+def chat_reply_stream(predicted_class, confidence, message, history, language):
     """Yield reply text chunks from the configured provider."""
-    system_prompt, _ = _build_system_prompt(predicted_class, confidence)
+    system_prompt, _ = _build_system_prompt(predicted_class, confidence, language)
     messages = (
         [{"role": "system", "content": system_prompt}]
         + _trim_history(history)
@@ -108,5 +111,5 @@ def chat_reply_stream(predicted_class, confidence, message, history):
         messages,
         temperature=0.4,
         max_tokens=1024,
-        session=_session_id(predicted_class, history, message),
+        session=_session_id(predicted_class, history, message, language),
     )
