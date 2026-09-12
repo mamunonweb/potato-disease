@@ -60,27 +60,21 @@ export function DetectPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <section className="from-primary/10 via-accent/40 to-background grid items-center gap-6 overflow-hidden rounded-2xl border bg-linear-to-br p-6 sm:p-8 lg:grid-cols-[1.2fr_1fr]">
-        <div className="flex flex-col gap-3">
-          <Badge className="w-fit" variant="secondary">
+      <section className="from-primary/10 via-accent/40 to-background relative overflow-hidden rounded-2xl border bg-linear-to-br px-6 py-12 text-center sm:px-10 sm:py-16">
+        <div className="mx-auto flex max-w-2xl flex-col items-center gap-4">
+          <Badge variant="secondary">
             Explainable CNN · Grad-CAM · AI chat
           </Badge>
-          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">
             Spot potato diseases{' '}
             <span className="text-primary">in seconds</span>
           </h1>
-          <p className="text-muted-foreground max-w-md text-sm leading-relaxed sm:text-base">
+          <p className="text-muted-foreground max-w-xl text-sm leading-relaxed sm:text-base">
             Upload a leaf photo and get a prediction with a heatmap showing
             exactly where the model looked — then ask the AI assistant what to
             do about it.
           </p>
         </div>
-        <img
-          src="/og-image.jpg"
-          alt="Potato leaf with Grad-CAM attention overlay"
-          className="hidden w-full rounded-xl border shadow-lg lg:block"
-          loading="eager"
-        />
       </section>
 
       <Card className="mx-auto w-full max-w-xl">
