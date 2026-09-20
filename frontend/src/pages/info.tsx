@@ -11,6 +11,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { PageContainer } from '@/components/page-container'
 import { usePrediction } from '@/context/prediction'
 
 export function InfoPage() {
@@ -28,11 +29,15 @@ export function InfoPage() {
       icon: CheckCircle2,
       items: guidance.actions,
     },
-    { title: t('info.prevention'), icon: ShieldCheck, items: guidance.prevention },
+    {
+      title: t('info.prevention'),
+      icon: ShieldCheck,
+      items: guidance.prevention,
+    },
   ]
 
   return (
-    <div className="flex flex-col gap-6">
+    <PageContainer contentClassName="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold">{prediction.display_name}</h1>
         <Badge variant="outline">
@@ -82,6 +87,6 @@ export function InfoPage() {
           </Link>
         </Button>
       </div>
-    </div>
+    </PageContainer>
   )
 }

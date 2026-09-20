@@ -14,6 +14,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { CameraCapture } from '@/components/camera-capture'
+import { PageContainer } from '@/components/page-container'
 import { usePrediction } from '@/context/prediction'
 import { ApiError, predictImage } from '@/lib/api'
 
@@ -61,11 +62,11 @@ export function DetectPage() {
   }
 
   return (
-    <div className="flex flex-col gap-8">
-      <section className="from-primary/10 via-accent/40 to-background relative overflow-hidden rounded-2xl border bg-linear-to-br px-6 py-12 text-center sm:px-10 sm:py-16">
-        <div className="mx-auto flex max-w-2xl flex-col items-center gap-4">
+    <PageContainer contentClassName="flex flex-col gap-4 sm:gap-8">
+      <section className="from-primary/10 via-accent/40 to-background relative overflow-hidden rounded-2xl border bg-linear-to-br px-4 py-4 text-center sm:px-10 sm:py-16">
+        <div className="mx-auto flex max-w-2xl flex-col items-center gap-3 sm:gap-4">
           <Badge variant="secondary">{t('detect.badge')}</Badge>
-          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">
             {t('detect.titlePrefix')}{' '}
             <span className="text-primary">{t('detect.titleAccent')}</span>
           </h1>
@@ -82,20 +83,22 @@ export function DetectPage() {
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           {previewUrl ? (
-            <button
-              type="button"
-              onClick={() => inputRef.current?.click()}
-              className="group relative overflow-hidden rounded-lg border"
-            >
-              <img
-                src={previewUrl}
-                alt={t('detect.previewAlt')}
-                className="max-h-80 w-full object-contain"
-              />
-              <span className="bg-background/80 text-muted-foreground absolute inset-x-0 bottom-0 py-1 text-center text-xs opacity-0 transition-opacity group-hover:opacity-100">
+            <div className="flex flex-col items-center gap-2">
+              <button
+                type="button"
+                onClick={() => inputRef.current?.click()}
+                className="block max-w-full overflow-hidden rounded-lg border"
+              >
+                <img
+                  src={previewUrl}
+                  alt={t('detect.previewAlt')}
+                  className="max-h-40 w-auto max-w-full object-contain sm:max-h-80"
+                />
+              </button>
+              <p className="text-muted-foreground text-xs">
                 {t('detect.previewHint')}
-              </span>
-            </button>
+              </p>
+            </div>
           ) : (
             <div
               role="button"
@@ -111,7 +114,7 @@ export function DetectPage() {
                 event.preventDefault()
                 selectFile(event.dataTransfer.files?.[0] ?? null)
               }}
-              className="text-muted-foreground hover:bg-accent/40 flex min-h-52 cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed p-6 text-center transition-colors"
+              className="text-muted-foreground hover:bg-accent/40 flex min-h-32 cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed p-4 text-center transition-colors sm:min-h-52 sm:p-6"
             >
               <ScanSearch className="size-8" />
               <p className="text-sm font-medium">{t('detect.dropzoneTitle')}</p>
@@ -128,23 +131,28 @@ export function DetectPage() {
             onChange={(event) => selectFile(event.target.files?.[0] ?? null)}
           />
           <CameraCapture onCapture={selectFile} />
-          <Button
-            size="lg"
-            disabled={!file || mutation.isPending}
-            onClick={() => file && mutation.mutate(file)}
-          >
-            {mutation.isPending ? (
-              <>
-                <Loader2 className="size-4 animate-spin" /> {t('detect.analyzing')}
-              </>
-            ) : (
-              <>
-                <ScanSearch className="size-4" /> {t('detect.analyze')}
-              </>
-            )}
-          </Button>
         </CardContent>
       </Card>
-    </div>
+
+      <div className="bg-background/95 sticky bottom-0 z-10 mx-auto w-full max-w-xl pt-2 backdrop-blur sm:static sm:pt-0">
+        <Button
+          size="lg"
+          className="w-full"
+          disabled={!file || mutation.isPending}
+          onClick={() => file && mutation.mutate(file)}
+        >
+          {mutation.isPending ? (
+            <>
+              <Loader2 className="size-4 animate-spin" />{' '}
+              {t('detect.analyzing')}
+            </>
+          ) : (
+            <>
+              <ScanSearch className="size-4" /> {t('detect.analyze')}
+            </>
+          )}
+        </Button>
+      </div>
+    </PageContainer>
   )
 }

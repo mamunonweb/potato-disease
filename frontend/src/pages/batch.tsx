@@ -20,6 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { PageContainer } from '@/components/page-container'
 import { predictBatch } from '@/lib/api'
 import type { BatchItem, BatchResponse } from '@/lib/types'
 import { cn } from '@/lib/utils'
@@ -42,7 +43,11 @@ function csvEscape(value: string): string {
   return value
 }
 
-function downloadCsv(results: BatchItem[], header: string[], errorLabel: string) {
+function downloadCsv(
+  results: BatchItem[],
+  header: string[],
+  errorLabel: string,
+) {
   const rows = results.map((item) => {
     if (item.status === 'error') {
       return [item.filename, errorLabel, '', '', '', item.error]
@@ -117,7 +122,10 @@ export function BatchPage() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
+    <PageContainer
+      className="mx-auto w-full max-w-4xl"
+      contentClassName="flex flex-col gap-6"
+    >
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">
           {t('batch.title')}
@@ -223,7 +231,9 @@ export function BatchPage() {
                   <TableHead>{t('batch.tableImage')}</TableHead>
                   <TableHead>{t('batch.tablePrediction')}</TableHead>
                   <TableHead>{t('batch.tableConfidence')}</TableHead>
-                  <TableHead>{t('batch.tableTop3')}</TableHead>
+                  <TableHead className="hidden sm:table-cell">
+                    {t('batch.tableTop3')}
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -246,7 +256,7 @@ export function BatchPage() {
                         <TableCell>
                           {(item.confidence * 100).toFixed(2)}%
                         </TableCell>
-                        <TableCell className="text-muted-foreground text-xs">
+                        <TableCell className="text-muted-foreground hidden text-xs sm:table-cell">
                           {item.top_predictions
                             .slice(0, 3)
                             .map(
@@ -291,6 +301,6 @@ export function BatchPage() {
           </CardContent>
         </Card>
       )}
-    </div>
+    </PageContainer>
   )
 }

@@ -121,10 +121,22 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
   body {
     @apply bg-background text-foreground;
+    overscroll-behavior: none;
+    -webkit-tap-highlight-color: transparent;
   }
   html {
     @apply font-sans;
   }
+}
+
+.app-viewport {
+  height: 100svh;
+  height: 100dvh;
 }

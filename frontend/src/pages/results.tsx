@@ -1,13 +1,16 @@
+import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { Link, Navigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { BookOpen, FileDown, MessageCircle } from 'lucide-react'
 import { toast } from 'sonner'
+import { PageContainer } from '@/components/page-container'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { usePrediction } from '@/context/prediction'
 import { reportPdf } from '@/lib/api'
 
@@ -20,6 +23,7 @@ const SEVERITY_STYLES: Record<string, string> = {
 export function ResultsPage() {
   const { prediction, imageUrl, file } = usePrediction()
   const { t } = useTranslation()
+  const [showAll, setShowAll] = useState(false)
 
   const reportMutation = useMutation({
     mutationFn: () => {
@@ -42,8 +46,15 @@ export function ResultsPage() {
 
   const isHealthy = prediction.predicted_class === 'Healthy'
 
+  const sortedProbabilities = Object.entries(prediction.probabilities).sort(
+    ([, a], [, b]) => b - a,
+  )
+  const visibleProbabilities = showAll
+    ? sortedProbabilities
+    : sortedProbabilities.slice(0, 3)
+
   return (
-    <div className="flex flex-col gap-6">
+    <PageContainer contentClassName="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold">{t('results.title')}</h1>
         <Badge variant={isHealthy ? 'secondary' : 'destructive'}>
@@ -59,7 +70,38 @@ export function ResultsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
-            <div className="grid gap-3 sm:grid-cols-2">
+            <Tabs defaultValue="original" className="sm:hidden">
+              <TabsList className="w-full">
+                <TabsTrigger value="original">
+                  {t('results.original')}
+                </TabsTrigger>
+                <TabsTrigger value="gradcam">
+                  {t('results.attentionOverlay')}
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="original" className="mt-3">
+                <img
+                  src={imageUrl}
+                  alt={t('results.uploadedAlt')}
+                  className="max-h-[45vh] w-full rounded-lg border object-contain"
+                />
+              </TabsContent>
+              <TabsContent value="gradcam" className="mt-3">
+                {prediction.gradcam ? (
+                  <img
+                    src={prediction.gradcam.image_data_uri}
+                    alt={t('results.gradcamAlt')}
+                    className="max-h-[45vh] w-full rounded-lg border object-contain"
+                  />
+                ) : (
+                  <div className="text-muted-foreground flex min-h-40 items-center justify-center rounded-lg border border-dashed p-4 text-center text-xs">
+                    {t('results.gradcamUnavailable')}
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+
+            <div className="hidden gap-3 sm:grid sm:grid-cols-2">
               <figure>
                 <img
                   src={imageUrl}
@@ -87,6 +129,7 @@ export function ResultsPage() {
                 </div>
               )}
             </div>
+
             {prediction.gradcam && (
               <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-sm">
                 <Badge
@@ -100,10 +143,9 @@ export function ResultsPage() {
                 </Badge>
                 <span>
                   {t('results.attentionLevel', {
-                    level: t(
-                      `severity.${prediction.gradcam.severity.level}`,
-                      { defaultValue: prediction.gradcam.severity.level },
-                    ),
+                    level: t(`severity.${prediction.gradcam.severity.level}`, {
+                      defaultValue: prediction.gradcam.severity.level,
+                    }),
                   })}
                 </span>
               </div>
@@ -133,20 +175,30 @@ export function ResultsPage() {
               <p className="text-sm font-medium">
                 {t('results.classProbabilities')}
               </p>
-              {Object.entries(prediction.probabilities).map(
-                ([className, value]) => (
-                  <div key={className} className="flex flex-col gap-1">
-                    <div className="flex justify-between text-sm">
-                      <span>
-                        {t(`classes.${className}`, {
-                          defaultValue: className,
-                        })}
-                      </span>
-                      <span>{(value * 100).toFixed(1)}%</span>
-                    </div>
-                    <Progress value={value * 100} />
+              {visibleProbabilities.map(([className, value]) => (
+                <div key={className} className="flex flex-col gap-1">
+                  <div className="flex justify-between text-sm">
+                    <span>
+                      {t(`classes.${className}`, {
+                        defaultValue: className,
+                      })}
+                    </span>
+                    <span>{(value * 100).toFixed(1)}%</span>
                   </div>
-                ),
+                  <Progress value={value * 100} />
+                </div>
+              ))}
+              {sortedProbabilities.length > 3 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="mt-1 w-fit"
+                  onClick={() => setShowAll((current) => !current)}
+                >
+                  {showAll
+                    ? t('results.showTopClasses')
+                    : t('results.showAllClasses')}
+                </Button>
               )}
             </div>
             <div className="flex flex-wrap gap-2 pt-2">
@@ -174,6 +226,6 @@ export function ResultsPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </PageContainer>
   )
 }

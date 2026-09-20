@@ -83,7 +83,7 @@ export function ChatPage() {
   }
 
   return (
-    <div className="mx-auto flex min-h-105 w-full max-w-2xl flex-1 flex-col gap-4">
+    <div className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col gap-3 px-3 sm:gap-4 sm:px-4">
       <div className="flex shrink-0 flex-wrap items-center justify-between gap-2">
         <h1 className="text-xl font-semibold">{t('chat.title')}</h1>
         <Badge
@@ -153,7 +153,7 @@ export function ChatPage() {
           placeholder={t('chat.placeholder')}
           rows={2}
           maxLength={2000}
-          className="resize-none"
+          className="max-h-32 resize-none"
         />
         <Button
           size="icon"

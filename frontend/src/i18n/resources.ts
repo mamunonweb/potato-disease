@@ -50,6 +50,8 @@ export const resources = {
         predictionTitle: 'Prediction',
         confidence: 'Confidence {{value}}%',
         classProbabilities: 'Class probabilities',
+        showAllClasses: 'Show all classes',
+        showTopClasses: 'Show top 3',
         askAi: 'Ask AI about this',
         diseaseInfo: 'Disease information',
         generating: 'Generating…',
@@ -143,7 +145,8 @@ export const resources = {
       common: {
         appTitle: 'আলু রোগ শনাক্তকরণ',
         appTitleShort: 'আলু',
-        footer: 'এআই-ভিত্তিক প্রাথমিক শ্রেণীবিভাগ — এটি নিশ্চিত রোগনির্ণয় নয়।',
+        footer:
+          'এআই-ভিত্তিক প্রাথমিক শ্রেণীবিভাগ — এটি নিশ্চিত রোগনির্ণয় নয়।',
         toggleTheme: 'থিম পরিবর্তন করুন',
         language: 'ভাষা',
         english: 'English',
@@ -188,6 +191,8 @@ export const resources = {
         predictionTitle: 'পূর্বাভাস',
         confidence: 'আস্থা {{value}}%',
         classProbabilities: 'শ্রেণির সম্ভাবনা',
+        showAllClasses: 'সব শ্রেণি দেখান',
+        showTopClasses: 'শীর্ষ ৩টি দেখান',
         askAi: 'এটি সম্পর্কে এআই-কে জিজ্ঞাসা করুন',
         diseaseInfo: 'রোগের তথ্য',
         generating: 'তৈরি হচ্ছে…',

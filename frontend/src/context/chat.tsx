@@ -25,7 +25,10 @@ interface ChatContextValue {
 
 const ChatContext = createContext<ChatContextValue | null>(null)
 
-function greetingFor(prediction: PredictionResponse, t: TFunction): ChatMessage {
+function greetingFor(
+  prediction: PredictionResponse,
+  t: TFunction,
+): ChatMessage {
   return {
     role: 'assistant',
     content: t('chat.greeting', {
@@ -70,7 +73,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     // Language changed: refresh the opening greeting without dropping the chat.
     setState((prev) => {
       const messages = [...prev.messages]
-      if (messages.length > 0 && messages[0].role === 'assistant' && prediction) {
+      if (
+        messages.length > 0 &&
+        messages[0].role === 'assistant' &&
+        prediction
+      ) {
         messages[0] = greetingFor(prediction, t)
       }
       return { ...prev, language, messages }

@@ -93,7 +93,7 @@ export function CameraCapture({ onCapture }: CameraCaptureProps) {
           <Camera className="size-4" /> {t('camera.takePhoto')}
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{t('camera.dialogTitle')}</DialogTitle>
           <DialogDescription>{t('camera.dialogDescription')}</DialogDescription>
@@ -116,7 +116,8 @@ export function CameraCapture({ onCapture }: CameraCaptureProps) {
           <Button className="w-full" disabled={!ready} onClick={capture}>
             {starting ? (
               <>
-                <Loader2 className="size-4 animate-spin" /> {t('camera.starting')}
+                <Loader2 className="size-4 animate-spin" />{' '}
+                {t('camera.starting')}
               </>
             ) : (
               <>
